@@ -1,39 +1,51 @@
-import { useState } from "react";
-import { Routes, Route, useNavigate, useParams } from "react-router";
+import { Navigate, Routes, Route, useParams, useNavigate } from "react-router";
 import { LandingPage } from "@/features/landing";
 import { AuthPage } from "@/features/auth";
 import { DealFeed, DealDetailPage } from "@/features/deal";
 import { InvestorDashboard, FounderDashboard } from "@/features/dashboard";
 import { SubscriptionPage } from "@/features/subscription";
-import { ROLES } from "@/features/auth/types/auth.types";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
-// Extracts :id from URL and passes it down to DealDetailPage
-function DealDetailWrapper({ onNavigate, userRole, onLogout }) {
+// ─── Protected route wrapper ──────────────────────────────────────────────────
+
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return children;
+}
+
+// ─── URL param extractor for deal detail ─────────────────────────────────────
+
+function DealDetailWrapper({ onNavigate }) {
   const { id } = useParams();
+  const { role, logout } = useAuth();
+
   return (
     <DealDetailPage
       dealId={parseInt(id, 10)}
+      userRole={role}
+      onLogout={logout}
       onNavigate={onNavigate}
-      userRole={userRole}
-      onLogout={onLogout}
     />
   );
 }
 
+// ─── App ─────────────────────────────────────────────────────────────────────
+
 export default function App() {
   const rNavigate = useNavigate();
-  const [userRole, setUserRole] = useState(ROLES.GUEST);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const { role, logout, isAuthenticated } = useAuth();
 
-  /** Central navigate helper — maps logical page names to URL paths */
   const navigate = (page, dealId) => {
     const routes = {
-      landing:            "/",
-      auth:               "/login",
-      "deal-feed":        "/deals",
+      landing: "/",
+      auth: "/login",
+      "deal-feed": "/deals",
       "investor-dashboard": "/dashboard",
       "founder-dashboard": "/dashboard/founder",
-      subscription:       "/subscription",
+      subscription: "/subscription",
     };
     if (page === "deal-detail" && dealId !== undefined) {
       rNavigate(`/deals/${dealId}`);
@@ -42,20 +54,11 @@ export default function App() {
     }
   };
 
-  const handleAuth = (role) => {
-    setUserRole(role);
-    setIsAuthenticated(true);
-    if (role === ROLES.INVESTOR) navigate("deal-feed");
-    else if (role === ROLES.FOUNDER) navigate("founder-dashboard");
+  const sharedProps = {
+    userRole: role,
+    onLogout: logout,
+    onNavigate: navigate,
   };
-
-  const handleLogout = () => {
-    setIsAuthenticated(false);
-    setUserRole(ROLES.GUEST);
-    navigate("landing");
-  };
-
-  const sharedProps = { onNavigate: navigate, userRole, onLogout: handleLogout };
 
   return (
     <div className="min-h-screen bg-black dark text-white relative overflow-hidden">
@@ -67,13 +70,28 @@ export default function App() {
 
       <div className="relative z-10">
         <Routes>
-          <Route path="/"                element={<LandingPage onNavigate={navigate} />} />
-          <Route path="/login"           element={<AuthPage onAuth={handleAuth} onBack={() => navigate("landing")} />} />
-          <Route path="/deals"           element={<DealFeed {...sharedProps} />} />
-          <Route path="/deals/:id"       element={<DealDetailWrapper {...sharedProps} />} />
-          <Route path="/dashboard"       element={<InvestorDashboard {...sharedProps} />} />
-          <Route path="/dashboard/founder" element={<FounderDashboard {...sharedProps} />} />
-          <Route path="/subscription"    element={<SubscriptionPage {...sharedProps} />} />
+          {/* Public routes */}
+          <Route path="/" element={<LandingPage onNavigate={navigate} />} />
+          <Route path="/login" element={
+            isAuthenticated
+              ? <Navigate to={role === 'founder' ? '/dashboard/founder' : '/dashboard'} replace />
+              : <AuthPage onBack={() => window.history.back()} />
+          } />
+          <Route path="/deals" element={<DealFeed {...sharedProps} />} />
+          <Route path="/deals/:id" element={<DealDetailWrapper onNavigate={navigate} />} />
+          <Route path="/subscription" element={<SubscriptionPage {...sharedProps} />} />
+
+          {/* Protected routes */}
+          <Route path="/dashboard" element={
+            <ProtectedRoute>
+              <InvestorDashboard {...sharedProps} />
+            </ProtectedRoute>
+          } />
+          <Route path="/dashboard/founder" element={
+            <ProtectedRoute>
+              <FounderDashboard {...sharedProps} />
+            </ProtectedRoute>
+          } />
         </Routes>
       </div>
     </div>

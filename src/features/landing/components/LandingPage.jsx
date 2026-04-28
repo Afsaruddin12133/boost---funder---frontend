@@ -1,7 +1,11 @@
-import { ArrowRight, Rocket, Users, Shield, TrendingUp, CheckCircle, Star } from "lucide-react";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import SiteFooter from "@/shared/components/SiteFooter";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
+import { ArrowRight, CheckCircle, Rocket, Shield, TrendingUp, Users } from "lucide-react";
+import { useEffect } from "react";
 export default function LandingPage({ onNavigate }) {
+  const { isAuthenticated, role } = useAuth();
   const featuredDeals = [
     {
       id: 1,
@@ -34,29 +38,81 @@ export default function LandingPage({ onNavigate }) {
     { icon: Users, title: "Direct Access", desc: "Connect directly with founders" },
     { icon: Rocket, title: "Fast Process", desc: "Request and unlock deals instantly" }
   ];
-  return <div className="min-h-screen">
+  useEffect(() => {
+    const elements = document.querySelectorAll("[data-reveal]");
+    if (!elements.length) return;
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("is-visible");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, {
+      threshold: 0.2,
+      rootMargin: "0px 0px -10% 0px"
+    });
+    elements.forEach(element => observer.observe(element));
+    return () => observer.disconnect();
+  }, []);
+  const handleScrollTo = sectionId => {
+    const target = document.getElementById(sectionId);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+  const handleExploreDeals = () => {
+    if (!isAuthenticated) {
+      onNavigate("auth");
+      return;
+    }
+    if (role === "founder") {
+      onNavigate("founder-dashboard");
+      return;
+    }
+    onNavigate("investor-dashboard");
+  };
+  return <div className="min-h-screen text-white bg-black scroll-smooth snap-y snap-mandatory">
       {
     /* Navigation */
   }
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#081b12]/90 via-black/70 to-[#0b1f14]/90 backdrop-blur-xl border-b border-white/10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#01F27B] rounded-lg flex items-center justify-center">
               <Rocket className="w-5 h-5 text-black" />
             </div>
-            <span className="text-xl font-semibold">BoostFundr</span>
+            <span className="text-sm sm:text-xl font-semibold">BoostFundr</span>
           </div>
-          <div className="flex gap-4">
+          <div className="hidden md:flex items-center gap-1">
+            <Button variant="ghost" className="hover:bg-white/5" onClick={() => handleScrollTo("hero")}
+  >
+              Home
+            </Button>
+            <Button variant="ghost" className="hover:bg-white/5" onClick={() => handleScrollTo("featured")}
+  >
+              Deals
+            </Button>
+            <Button variant="ghost" className="hover:bg-white/5" onClick={() => handleScrollTo("features")}
+  >
+              Why Us
+            </Button>
+            <Button variant="ghost" className="hover:bg-white/5" onClick={() => handleScrollTo("how")}
+  >
+              How It Works
+            </Button>
+          </div>
+          <div className="flex items-center gap-2 sm:gap-4">
             <Button
     variant="ghost"
     onClick={() => onNavigate("auth")}
-    className="hover:bg-white/5"
+    className="hidden sm:inline-flex hover:bg-white/5"
   >
               Sign In
             </Button>
             <Button
     onClick={() => onNavigate("auth")}
-    className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black"
+    className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black h-10 px-4 text-sm sm:h-11 sm:px-5 sm:text-base"
   >
               Get Started
             </Button>
@@ -67,39 +123,48 @@ export default function LandingPage({ onNavigate }) {
       {
     /* Hero Section */
   }
-      <section className="pt-32 pb-20 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#06120b] via-black to-black" />
+      <section id="hero" className="min-h-screen pt-32 pb-20 px-6 relative overflow-hidden snap-start flex items-center">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0c2014] via-black to-[#040806]" />
         <div
     className="absolute inset-0"
     style={{
-      backgroundImage: `radial-gradient(circle at 50% 0%, rgba(1, 242, 123, 0.2), transparent 40%),
-                             radial-gradient(circle at 80% 20%, rgba(1, 242, 123, 0.1), transparent 30%),
-                             radial-gradient(circle at 20% 80%, rgba(1, 242, 123, 0.05), transparent 40%)`
+      backgroundImage: `radial-gradient(circle at 50% 0%, rgba(1, 242, 123, 0.35), transparent 42%),
+                             radial-gradient(circle at 85% 25%, rgba(1, 242, 123, 0.2), transparent 35%),
+                             radial-gradient(circle at 15% 80%, rgba(1, 242, 123, 0.15), transparent 42%)`
     }}
   />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#01F27B]/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#01F27B]/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 noise-overlay opacity-30" />
 
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center max-w-4xl mx-auto">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#01F27B]/10 border border-[#01F27B]/20 mb-8">
-              <Star className="w-4 h-4 text-[#01F27B]" />
-              <span className="text-sm text-[#01F27B]">Premium Startup Deal Platform</span>
-            </div>
 
-            <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
+            <h1
+              data-reveal
+              className="reveal text-4xl sm:text-5xl md:text-7xl font-bold mb-6 leading-[1.05] tracking-tight"
+              style={{ "--reveal-delay": "0ms" }}
+            >
               Discover Private
               <span className="block text-[#01F27B]">Startup Deals</span>
             </h1>
 
-            <p className="text-xl text-white/70 mb-10 max-w-2xl mx-auto">
+            <p
+              data-reveal
+              className="reveal text-xl text-white/70 mb-10 max-w-2xl mx-auto"
+              style={{ "--reveal-delay": "120ms" }}
+            >
               Connect directly with founders. Access exclusive deal flow. Invest in the next generation of startups.
             </p>
 
-            <div className="flex gap-4 justify-center">
+            <div
+              data-reveal
+              className="reveal flex gap-4 justify-center"
+              style={{ "--reveal-delay": "240ms" }}
+            >
               <Button
     size="lg"
     onClick={() => onNavigate("auth")}
-    className="bg-gradient-to-r from-[#01F27B] to-[#00d66d] hover:from-[#01F27B]/90 hover:to-[#00d66d]/90 text-black text-lg px-8 h-14 shadow-[0_0_30px_rgba(1,242,123,0.3)] hover:shadow-[0_0_40px_rgba(1,242,123,0.4)] transition-all"
+    className="bg-gradient-to-r from-[#01F27B] to-[#00d66d] hover:from-[#01F27B]/90 hover:to-[#00d66d]/90 text-black text-base sm:text-lg px-5 sm:px-8 h-11 sm:h-14 shadow-[0_0_30px_rgba(1,242,123,0.3)] hover:shadow-[0_0_40px_rgba(1,242,123,0.4)] transition-all"
   >
                 Get Started
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -107,8 +172,8 @@ export default function LandingPage({ onNavigate }) {
               <Button
     size="lg"
     variant="outline"
-    onClick={() => onNavigate("deal-feed")}
-    className="border-white/20 hover:bg-white/5 text-lg px-8 h-14"
+    onClick={handleExploreDeals}
+    className="border-white/20 hover:bg-white/5 text-base sm:text-lg px-5 sm:px-8 h-11 sm:h-14"
   >
                 Explore Deals
               </Button>
@@ -120,20 +185,31 @@ export default function LandingPage({ onNavigate }) {
       {
     /* Featured Deals */
   }
-      <section className="py-20 px-6">
+      <section id="featured" className="min-h-[85vh] pt-28 pb-24 px-6 relative overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0a1b12] to-black" />
+        <div className="absolute -top-32 right-0 w-[30rem] h-[30rem] bg-gradient-to-br from-[#01F27B]/20 to-transparent rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 left-0 w-[26rem] h-[26rem] bg-gradient-to-tr from-[#01F27B]/15 to-transparent rounded-full blur-3xl" />
+        <div className="absolute inset-0 noise-overlay opacity-25" />
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Featured Deals</h2>
-            <p className="text-white/60">Hand-picked opportunities from verified founders</p>
+            <h2 data-reveal className="reveal text-4xl font-bold mb-4 tracking-tight" style={{ "--reveal-delay": "0ms" }}>
+              Featured Deals
+            </h2>
+            <p data-reveal className="reveal text-white/60" style={{ "--reveal-delay": "120ms" }}>
+              Hand-picked opportunities from verified founders
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             {featuredDeals.map((deal, idx) => <Card
     key={deal.id}
-    className="bg-gradient-to-br from-[#0c0c0c] via-[#0c0c0c] to-[#06120b] border-white/10 p-6 hover:border-[#01F27B]/30 transition-all hover:scale-[1.02] cursor-pointer group relative overflow-hidden"
+    data-reveal
+    className="reveal bg-gradient-to-br from-[#0b0f0d] via-[#0b0f0d] to-[#06120b] border-white/10 p-6 hover:border-[#01F27B]/30 transition-all hover:scale-[1.02] cursor-pointer group relative overflow-hidden shadow-[0_0_40px_rgba(1,242,123,0.05)]"
+    style={{ "--reveal-delay": `${idx * 140}ms` }}
     onClick={() => onNavigate("deal-feed")}
   >
-                <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#01F27B]/5 to-transparent rounded-full blur-2xl" />
+                <div className="absolute top-0 right-0 w-40 h-40 bg-gradient-to-br from-[#01F27B]/10 to-transparent rounded-full blur-2xl" />
+                <div className="absolute -bottom-16 -left-10 w-48 h-48 bg-gradient-to-tr from-[#01F27B]/10 to-transparent rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="relative z-10">
                 <div className="flex justify-between items-start mb-4">
                   <div className="px-3 py-1 rounded-full bg-[#01F27B]/10 text-[#01F27B] text-sm">
@@ -158,19 +234,26 @@ export default function LandingPage({ onNavigate }) {
       {
     /* Features */
   }
-      <section className="py-20 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-[#06120b]/50 to-black" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#01F27B]/5 via-transparent to-transparent" />
+      <section id="features" className="min-h-[85vh] pt-28 pb-24 px-6 relative overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0b1f14] to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#01F27B]/15 via-transparent to-transparent" />
+        <div className="absolute inset-0 noise-overlay opacity-25" />
         <div className="max-w-7xl mx-auto relative z-10">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">Why BoostFundr?</h2>
-            <p className="text-white/60">The premium platform for startup investment</p>
+            <h2 data-reveal className="reveal text-4xl font-bold mb-4 tracking-tight" style={{ "--reveal-delay": "0ms" }}>
+              Why BoostFundr?
+            </h2>
+            <p data-reveal className="reveal text-white/60" style={{ "--reveal-delay": "120ms" }}>
+              The premium platform for startup investment
+            </p>
           </div>
 
           <div className="grid md:grid-cols-4 gap-6">
             {features.map((feature, idx) => <div
     key={idx}
-    className="text-center p-6 rounded-2xl bg-gradient-to-b from-[#0c0c0c] to-black/40 border border-white/10 hover:border-[#01F27B]/30 transition-all hover:shadow-[0_0_30px_rgba(1,242,123,0.1)] relative group overflow-hidden"
+              data-reveal
+              className="reveal text-center p-6 rounded-2xl bg-gradient-to-b from-[#0b0f0d] via-[#0a1410] to-black/60 border border-white/10 hover:border-[#01F27B]/30 transition-all hover:shadow-[0_0_30px_rgba(1,242,123,0.12)] relative group overflow-hidden"
+              style={{ "--reveal-delay": `${idx * 120}ms` }}
   >
                 <div className="absolute inset-0 bg-gradient-to-br from-[#01F27B]/0 to-[#01F27B]/0 group-hover:from-[#01F27B]/5 group-hover:to-transparent transition-all duration-500" />
                 <div className="relative z-10">
@@ -188,14 +271,23 @@ export default function LandingPage({ onNavigate }) {
       {
     /* How It Works */
   }
-      <section className="py-20 px-6">
+      <section id="how" className="min-h-[85vh] pt-28 pb-24 px-6 relative overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0a1a12] to-black" />
+        <div className="absolute -top-24 left-10 w-64 h-64 bg-gradient-to-br from-[#01F27B]/18 to-transparent rounded-full blur-3xl" />
+        <div className="absolute inset-0 noise-overlay opacity-25" />
         <div className="max-w-5xl mx-auto">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">How It Works</h2>
+            <h2 data-reveal className="reveal text-4xl font-bold mb-4 tracking-tight" style={{ "--reveal-delay": "0ms" }}>
+              How It Works
+            </h2>
           </div>
 
           <div className="grid md:grid-cols-2 gap-12">
-            <div>
+            <div
+              data-reveal
+              className="reveal rounded-3xl border border-white/10 bg-gradient-to-br from-[#0b0f0d] via-[#0a1410] to-black/70 p-8 shadow-[0_0_30px_rgba(1,242,123,0.06)]"
+              style={{ "--reveal-delay": "0ms" }}
+            >
               <h3 className="text-2xl font-semibold mb-6 text-[#01F27B]">For Investors</h3>
               <div className="space-y-4">
                 {["Browse curated deals", "Request access to startups", "Connect with founders", "Make investments"].map((step, idx) => <div key={idx} className="flex items-start gap-3">
@@ -205,7 +297,11 @@ export default function LandingPage({ onNavigate }) {
               </div>
             </div>
 
-            <div>
+            <div
+              data-reveal
+              className="reveal rounded-3xl border border-white/10 bg-gradient-to-br from-[#0b0f0d] via-[#0a1410] to-black/70 p-8 shadow-[0_0_30px_rgba(1,242,123,0.06)]"
+              style={{ "--reveal-delay": "140ms" }}
+            >
               <h3 className="text-2xl font-semibold mb-6 text-[#01F27B]">For Founders</h3>
               <div className="space-y-4">
                 {["Create startup profile", "Upload pitch materials", "Manage investor requests", "Close deals faster"].map((step, idx) => <div key={idx} className="flex items-start gap-3">
@@ -221,14 +317,20 @@ export default function LandingPage({ onNavigate }) {
       {
     /* CTA */
   }
-      <section className="py-20 px-6 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#01F27B]/10 via-transparent to-transparent" />
+      <section id="cta" className="min-h-[85vh] pt-28 pb-24 px-6 relative overflow-hidden snap-start">
+        <div className="absolute inset-0 bg-gradient-to-br from-black via-[#0b1f14] to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#01F27B]/20 via-transparent to-transparent" />
+        <div className="absolute inset-0 noise-overlay opacity-30" />
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <div className="bg-gradient-to-br from-[#06120b] via-[#0c0c0c] to-black border border-[#01F27B]/30 rounded-3xl p-12 relative overflow-hidden shadow-[0_0_50px_rgba(1,242,123,0.1)]">
+          <div
+            data-reveal
+            className="reveal bg-gradient-to-br from-[#06120b] via-[#0c0c0c] to-black border border-[#01F27B]/30 rounded-3xl p-12 relative overflow-hidden shadow-[0_0_50px_rgba(1,242,123,0.1)]"
+            style={{ "--reveal-delay": "0ms" }}
+          >
             <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-[#01F27B]/10 to-transparent rounded-full blur-3xl" />
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-[#01F27B]/5 to-transparent rounded-full blur-3xl" />
             <div className="relative z-10">
-            <h2 className="text-4xl font-bold mb-4">Ready to Get Started?</h2>
+            <h2 className="text-4xl font-bold mb-4 tracking-tight">Ready to Get Started?</h2>
             <p className="text-white/70 mb-8 text-lg">
               Join thousands of investors and founders building the future
             </p>
@@ -248,10 +350,16 @@ export default function LandingPage({ onNavigate }) {
       {
     /* Footer */
   }
-      <footer className="border-t border-white/10 py-8 px-6">
-        <div className="max-w-7xl mx-auto text-center text-white/40 text-sm">
-          <p>© 2026 BoostFundr. Premium startup deal platform.</p>
-        </div>
-      </footer>
+      <SiteFooter
+        onNavigate={onNavigate}
+        onScrollTo={handleScrollTo}
+        onLinkAction={(link) => {
+          if (link.type === "route" && link.target === "deal-feed") {
+            handleExploreDeals();
+            return true;
+          }
+          return false;
+        }}
+      />
     </div>;
 }
