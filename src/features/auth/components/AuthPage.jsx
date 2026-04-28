@@ -1,10 +1,10 @@
 import { Button } from "@/shared/ui/button";
 import {
-    Dialog,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
@@ -218,7 +218,7 @@ export default function AuthPage({ onBack }) {
                       <button
                         type="button"
                         onClick={() => setRole("investor")}
-                        className={`p-4 rounded-xl border transition-all ${fields.role === "investor" ? "border-[#01F27B] bg-[#01F27B]/10" : "border-white/10 hover:border-white/20"}`}
+                        className={`p-4 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 ${fields.role === "investor" ? "border-[#01F27B] bg-[#01F27B]/10" : "border-white/10 hover:border-white/20"}`}
                       >
                         <User className="w-5 h-5 mb-2 mx-auto" />
                         <div className="text-sm font-medium">Investor</div>
@@ -226,7 +226,7 @@ export default function AuthPage({ onBack }) {
                       <button
                         type="button"
                         onClick={() => setRole("founder")}
-                        className={`p-4 rounded-xl border transition-all ${fields.role === "founder" ? "border-[#01F27B] bg-[#01F27B]/10" : "border-white/10 hover:border-white/20"}`}
+                        className={`p-4 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 ${fields.role === "founder" ? "border-[#01F27B] bg-[#01F27B]/10" : "border-white/10 hover:border-white/20"}`}
                       >
                         <Rocket className="w-5 h-5 mb-2 mx-auto" />
                         <div className="text-sm font-medium">Founder</div>
@@ -307,7 +307,7 @@ export default function AuthPage({ onBack }) {
                 <Button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-[#01F27B] hover:bg-[#01F27B]/90 text-black h-12 font-semibold disabled:opacity-60"
+                  className="w-full bg-[#01F27B] hover:bg-[#01F27B]/90 text-black h-12 font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(1,242,123,0.25)] disabled:opacity-60"
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
@@ -349,7 +349,7 @@ export default function AuthPage({ onBack }) {
                   variant="outline"
                   disabled={loading}
                   onClick={() => handleSocialLoginClick('google')}
-                  className="w-full h-12 bg-transparent border-white/10 hover:bg-white/5 hover:border-white/20 text-white transition-all disabled:opacity-60"
+                  className="w-full h-12 bg-transparent border-white/10 hover:bg-white/5 hover:border-[#01F27B]/40 text-white hover:text-[#01F27B] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(1,242,123,0.18)] disabled:opacity-60"
                 >
                   {/* Clean text alternative to brand icon */}
                   <span className="mr-2 font-bold text-lg leading-none">G</span> Continue with Google
@@ -360,7 +360,7 @@ export default function AuthPage({ onBack }) {
                   variant="outline"
                   disabled={loading}
                   onClick={() => handleSocialLoginClick('facebook')}
-                  className="w-full h-12 bg-transparent border-white/10 hover:bg-white/5 hover:border-white/20 text-white transition-all disabled:opacity-60"
+                  className="w-full h-12 bg-transparent border-white/10 hover:bg-white/5 hover:border-[#01F27B]/40 text-white hover:text-[#01F27B] transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(1,242,123,0.18)] disabled:opacity-60"
                 >
                   <span className="mr-2 font-bold text-lg leading-none">f</span> Continue with Facebook
                 </Button>
@@ -388,7 +388,7 @@ export default function AuthPage({ onBack }) {
             <button
               type="button"
               onClick={() => setSocialLoginState(prev => ({ ...prev, role: "investor" }))}
-              className={`p-4 rounded-xl border transition-all ${socialLoginState.role === "investor" ? "border-[#01F27B] bg-[#01F27B]/10" : "border-white/10 hover:border-white/20"}`}
+              className={`p-4 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 ${socialLoginState.role === "investor" ? "border-[#01F27B] bg-[#01F27B]/10" : "border-white/10 hover:border-white/20"}`}
             >
               <User className="w-5 h-5 mb-2 mx-auto" />
               <div className="text-sm font-medium">Investor</div>
@@ -396,7 +396,7 @@ export default function AuthPage({ onBack }) {
             <button
               type="button"
               onClick={() => setSocialLoginState(prev => ({ ...prev, role: "founder" }))}
-              className={`p-4 rounded-xl border transition-all ${socialLoginState.role === "founder" ? "border-[#01F27B] bg-[#01F27B]/10" : "border-white/10 hover:border-white/20"}`}
+              className={`p-4 rounded-xl border transition-all duration-200 ease-out hover:-translate-y-0.5 ${socialLoginState.role === "founder" ? "border-[#01F27B] bg-[#01F27B]/10" : "border-white/10 hover:border-white/20"}`}
             >
               <Rocket className="w-5 h-5 mb-2 mx-auto" />
               <div className="text-sm font-medium">Founder</div>
@@ -406,7 +406,7 @@ export default function AuthPage({ onBack }) {
           <Button
             type="button"
             onClick={handleSocialLoginConfirm}
-            className="w-full bg-[#01F27B] hover:bg-[#01F27B]/90 text-black h-12 font-semibold"
+            className="w-full bg-[#01F27B] hover:bg-[#01F27B]/90 text-black h-12 font-semibold transition-all duration-200 ease-out hover:-translate-y-0.5 hover:shadow-[0_10px_30px_rgba(1,242,123,0.25)]"
           >
             Continue
           </Button>

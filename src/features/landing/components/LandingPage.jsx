@@ -2,7 +2,7 @@ import { useAuth } from "@/features/auth/hooks/useAuth";
 import SiteFooter from "@/shared/components/SiteFooter";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { ArrowRight, CheckCircle, Rocket, Shield, TrendingUp, Users } from "lucide-react";
+import { ArrowRight, CheckCircle, Rocket, Shield, TrendingUp, Users, Zap, ArrowUpRight } from "lucide-react";
 import { useEffect } from "react";
 export default function LandingPage({ onNavigate }) {
   const { isAuthenticated, role } = useAuth();
@@ -136,47 +136,125 @@ export default function LandingPage({ onNavigate }) {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#01F27B]/20 via-transparent to-transparent" />
         <div className="absolute inset-0 noise-overlay opacity-30" />
 
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="text-center max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto relative z-10 w-full">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+            {/* Left Column - Content */}
+            <div className="text-left max-w-2xl">
+              {/* Badge */}
+              <div 
+                data-reveal
+                className="reveal inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 text-[#01F27B] text-xs font-semibold tracking-wider mb-8"
+                style={{ "--reveal-delay": "0ms" }}
+              >
+              </div>
 
-            <h1
-              data-reveal
-              className="reveal text-4xl sm:text-5xl md:text-7xl font-bold mb-6 leading-[1.05] tracking-tight"
-              style={{ "--reveal-delay": "0ms" }}
-            >
-              Discover Private
-              <span className="block text-[#01F27B]">Startup Deals</span>
-            </h1>
+              {/* Title */}
+              <h1
+                data-reveal
+                className="reveal text-4xl sm:text-5xl md:text-6xl lg:text-[4rem] font-bold mb-6 leading-[1.1] tracking-tight"
+                style={{ "--reveal-delay": "100ms" }}
+              >
+                Discover startup<br className="hidden sm:block" /> opportunities.
+                <span className="block text-[#01F27B]">Connect directly with<br className="hidden sm:block" /> founders.</span>
+              </h1>
 
-            <p
-              data-reveal
-              className="reveal text-xl text-white/70 mb-10 max-w-2xl mx-auto"
-              style={{ "--reveal-delay": "120ms" }}
-            >
-              Connect directly with founders. Access exclusive deal flow. Invest in the next generation of startups.
-            </p>
+              {/* Description */}
+              <p
+                data-reveal
+                className="reveal text-base sm:text-lg text-white/70 mb-10"
+                style={{ "--reveal-delay": "200ms" }}
+              >
+                The private ecosystem where elite capital meets world-class innovation.<br className="hidden sm:block" /> Access pre-seed to Series B rounds before they hit the public market.
+              </p>
 
-            <div
+              {/* Buttons */}
+              <div
+                data-reveal
+                className="reveal flex flex-wrap gap-4 mb-16"
+                style={{ "--reveal-delay": "300ms" }}
+              >
+                <Button
+                  size="lg"
+                  onClick={handleExploreDeals}
+                  className="bg-[#01F27B] hover:bg-[#00d66d] text-black text-base px-6 sm:px-8 h-12 sm:h-14 font-semibold shadow-[0_0_20px_rgba(1,242,123,0.3)] transition-all rounded-lg"
+                >
+                  Explore Deals
+                  <ArrowUpRight className="ml-2 w-5 h-5" />
+                </Button>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => onNavigate("auth")}
+                  className="border-white/10 bg-transparent hover:bg-white/5 text-white text-base px-6 sm:px-8 h-12 sm:h-14 font-semibold rounded-lg"
+                >
+                  Join as Investor
+                </Button>
+              </div>
+
+              {/* Stats */}
+              <div 
+                data-reveal
+                className="reveal flex items-center gap-8 text-left"
+                style={{ "--reveal-delay": "400ms" }}
+              >
+                <div>
+                  <div className="text-2xl sm:text-3xl font-bold text-white mb-1">$2.4B+</div>
+                  <div className="text-sm text-white/50">Capital Deployed</div>
+                </div>
+                <div className="w-px h-12 bg-white/10" />
+                <div>
+                  <div className="text-2xl sm:text-3xl font-bold text-white mb-1">450+</div>
+                  <div className="text-sm text-white/50">Active Startups</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right Column - Visual/Widgets */}
+            <div 
               data-reveal
-              className="reveal flex gap-4 justify-center"
-              style={{ "--reveal-delay": "240ms" }}
+              className="reveal hidden lg:block relative"
+              style={{ "--reveal-delay": "500ms" }}
             >
-              <Button
-    size="lg"
-    onClick={() => onNavigate("auth")}
-    className="bg-gradient-to-r from-[#01F27B] to-[#00d66d] hover:from-[#01F27B]/90 hover:to-[#00d66d]/90 text-black text-base sm:text-lg px-5 sm:px-8 h-11 sm:h-14 shadow-[0_0_30px_rgba(1,242,123,0.3)] hover:shadow-[0_0_40px_rgba(1,242,123,0.4)] transition-all"
-  >
-                Get Started
-                <ArrowRight className="ml-2 w-5 h-5" />
-              </Button>
-              <Button
-    size="lg"
-    variant="outline"
-    onClick={handleExploreDeals}
-    className="border-white/20 hover:bg-white/5 text-base sm:text-lg px-5 sm:px-8 h-11 sm:h-14"
-  >
-                Explore Deals
-              </Button>
+              <div className="relative w-full max-w-lg mx-auto mt-20">
+                {/* EcoVolt Energy Card */}
+                <Card className="absolute -right-8 -top-24 w-96 bg-[#0a120e] border-white/5 p-5 shadow-2xl z-0 transform rotate-2 rounded-2xl">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-[#01F27B]/10 flex items-center justify-center flex-shrink-0">
+                      <Zap className="w-6 h-6 text-[#01F27B]" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-white/90 text-lg">EcoVolt Energy</div>
+                      <div className="text-sm text-[#01F27B]">Series A • Sustainability</div>
+                    </div>
+                    <div className="text-xs font-bold bg-[#01F27B]/10 text-[#01F27B] px-3 py-1.5 rounded-full whitespace-nowrap">
+                      75% RAISED
+                    </div>
+                  </div>
+                  {/* Progress bar */}
+                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mt-2">
+                    <div className="h-full bg-[#01F27B] w-[75%] rounded-full" />
+                  </div>
+                </Card>
+
+                {/* Testimonial Card */}
+                <Card className="relative z-10 w-full bg-[#0a120e]/90 border-white/5 p-6 shadow-2xl transform -translate-x-12 translate-y-8 backdrop-blur-md rounded-2xl">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center overflow-hidden border border-white/10">
+                      <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                      <div className="font-medium text-white/90 flex items-center gap-1.5 text-lg">
+                        Marcus Chen 
+                        <CheckCircle className="w-4 h-4 text-[#01F27B]" />
+                      </div>
+                      <div className="text-sm text-white/50">CEO, AI-Core</div>
+                    </div>
+                  </div>
+                  <p className="text-sm text-white/60 italic leading-relaxed">
+                    "DealFlow Elite helped us close our bridge round in record time with strategic partners."
+                  </p>
+                </Card>
+              </div>
             </div>
           </div>
         </div>
