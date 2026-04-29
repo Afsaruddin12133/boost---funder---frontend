@@ -36,29 +36,43 @@ const api = {
   },
 
   async post(endpoint, body = {}, options = {}) {
+    const isFormData = body instanceof FormData;
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
+        // Let the browser set Content-Type for FormData (includes boundary)
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...getAuthHeader(),
-        ...options.headers,
+        // Allow caller to add extra headers but NOT override Content-Type for FormData
+        ...(options.headers
+          ? Object.fromEntries(
+              Object.entries(options.headers).filter(
+                ([k]) => !(isFormData && k.toLowerCase() === "content-type")
+              )
+            )
+          : {}),
       },
-      body: JSON.stringify(body),
-      ...options,
+      body: isFormData ? body : JSON.stringify(body),
     });
     return handleResponse(response);
   },
 
   async put(endpoint, body = {}, options = {}) {
+    const isFormData = body instanceof FormData;
     const response = await fetch(`${BASE_URL}${endpoint}`, {
       method: "PUT",
       headers: {
-        "Content-Type": "application/json",
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
         ...getAuthHeader(),
-        ...options.headers,
+        ...(options.headers
+          ? Object.fromEntries(
+              Object.entries(options.headers).filter(
+                ([k]) => !(isFormData && k.toLowerCase() === "content-type")
+              )
+            )
+          : {}),
       },
-      body: JSON.stringify(body),
-      ...options,
+      body: isFormData ? body : JSON.stringify(body),
     });
     return handleResponse(response);
   },

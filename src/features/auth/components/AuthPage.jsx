@@ -125,7 +125,7 @@ export default function AuthPage({ onBack }) {
   return (
     <div className="min-h-screen flex relative overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#09150f] via-black to-[#040806]" />
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0c2014] via-black to-[#040806]" />
       <div
         className="absolute inset-0 opacity-40"
         style={{

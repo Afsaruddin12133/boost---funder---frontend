@@ -5,6 +5,7 @@ import { DealFeed, DealDetailPage } from "@/features/deal";
 import { InvestorDashboard, FounderDashboard } from "@/features/dashboard";
 import { SubscriptionPage } from "@/features/subscription";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import DashboardLayout from "./layout/DashboardLayout";
 
 // ─── Protected route wrapper ──────────────────────────────────────────────────
 
@@ -63,12 +64,12 @@ export default function App() {
   return (
     <div className="min-h-screen bg-black dark text-white relative overflow-hidden">
       {/* Global ambient background */}
-      <div className="fixed inset-0 pointer-events-none">
+      <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-[#01F27B]/5 rounded-full blur-3xl" />
         <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-[#01F27B]/5 rounded-full blur-3xl" />
       </div>
 
-      <div className="relative z-10">
+      <div className="relative z-10 h-full">
         <Routes>
           {/* Public routes */}
           <Route path="/" element={<LandingPage onNavigate={navigate} />} />
@@ -82,14 +83,18 @@ export default function App() {
           <Route path="/subscription" element={<SubscriptionPage {...sharedProps} />} />
 
           {/* Protected routes */}
-          <Route path="/dashboard" element={
+          <Route path="/dashboard/*" element={
             <ProtectedRoute>
-              <InvestorDashboard {...sharedProps} />
+              <DashboardLayout userRole="investor" onNavigate={navigate} onLogout={logout}>
+                <InvestorDashboard {...sharedProps} />
+              </DashboardLayout>
             </ProtectedRoute>
           } />
-          <Route path="/dashboard/founder" element={
+          <Route path="/dashboard/founder/*" element={
             <ProtectedRoute>
-              <FounderDashboard {...sharedProps} />
+              <DashboardLayout userRole="founder" onNavigate={navigate} onLogout={logout}>
+                <FounderDashboard {...sharedProps} />
+              </DashboardLayout>
             </ProtectedRoute>
           } />
         </Routes>
