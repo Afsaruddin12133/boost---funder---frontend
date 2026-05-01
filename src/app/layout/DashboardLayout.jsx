@@ -1,13 +1,13 @@
 import React from "react";
 import { useLocation, useNavigate } from "react-router";
-import { 
-  LayoutDashboard, Building, Briefcase, LineChart, 
-  ShieldCheck, CreditCard, Settings, Compass, 
+import {
+  LayoutDashboard, Building, Briefcase, LineChart,
+  ShieldCheck, CreditCard, Settings, Compass,
   Bookmark, PieChart, MessageSquare, Search, Bell, Plus, LogOut
 } from "lucide-react";
 
-import { 
-  SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu, 
+import {
+  SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu,
   SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarTrigger
 } from "@/shared/ui/sidebar";
 import { Button } from "@/shared/ui/button";
@@ -21,11 +21,11 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
 
   const founderNav = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/founder" },
-    { name: "My Startup Profile", icon: Building, path: "/dashboard/founder/profile" },
     { name: "My Deals", icon: Briefcase, path: "/dashboard/founder/deals" },
-    { name: "Analytics", icon: LineChart, path: "/dashboard/founder/analytics" },
     { name: "Verification", icon: ShieldCheck, path: "/dashboard/founder/verification" },
     { name: "Subscription", icon: CreditCard, path: "/dashboard/founder/subscription" },
+    { name: "Analytics", icon: LineChart, path: "/dashboard/founder/analytics" },
+    { name: "My Profile", icon: Building, path: "/dashboard/founder/profile" },
     { name: "Settings", icon: Settings, path: "/dashboard/founder/settings" },
   ];
 
@@ -69,11 +69,10 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
                       // Navigate via react-router to the actual path
                       navigateRouter(item.path);
                     }}
-                    className={`h-11 px-4 rounded-xl transition-all ${
-                      isActive 
-                        ? "bg-[#01F27B] text-black font-semibold hover:bg-[#01F27B]/90 hover:text-black" 
+                    className={`h-11 px-4 rounded-xl transition-all ${isActive
+                        ? "bg-[#01F27B] text-black font-semibold hover:bg-[#01F27B]/90 hover:text-black"
                         : "text-white/70 hover:bg-white/5 hover:text-white"
-                    }`}
+                      }`}
                   >
                     <item.icon className={`w-5 h-5 mr-3 ${isActive ? "text-black" : "text-white/50"}`} />
                     <span className="text-sm">{item.name}</span>
@@ -104,8 +103,8 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
             <SidebarTrigger className="md:hidden text-white/70 hover:text-white" />
             <div className="relative hidden md:block w-96">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-              <Input 
-                placeholder="Search deals, investors..." 
+              <Input
+                placeholder="Search deals, investors..."
                 className="w-full h-10 bg-black/50 border-white/10 rounded-full pl-10 text-sm text-white placeholder:text-white/40 focus-visible:ring-[#01F27B]/50"
               />
             </div>

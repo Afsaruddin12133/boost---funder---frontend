@@ -1,362 +1,344 @@
 import { useState } from "react";
-import { ArrowLeft, Lock, Download, ExternalLink, Users, TrendingUp, MapPin, DollarSign, Calendar, CheckCircle, Rocket } from "lucide-react";
+import {
+  ArrowLeft, Lock, Download, ExternalLink, Users,
+  TrendingUp, MapPin, DollarSign, CheckCircle, FileText
+} from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/shared/ui/dialog";
-export default function DealDetailPage({ dealId, onNavigate, userRole, onLogout }) {
+import { getStatusMeta, formatCurrency } from "../utils/dealUtils";
+
+export default function DealDetailPage({ deal, onBack, userRole }) {
   const [showRequestModal, setShowRequestModal] = useState(false);
-  const [hasAccess, setHasAccess] = useState(false);
+  const [hasAccess, setHasAccess] = useState(userRole === "founder");
   const [requestSent, setRequestSent] = useState(false);
-  const deal = {
-    id: dealId,
-    name: "TechFlow AI",
-    tagline: "AI-powered code generation for enterprise teams",
-    logo: "\u{1F680}",
-    category: "AI/ML",
-    stage: "Seed",
-    location: "San Francisco, CA",
-    founded: "2024",
-    raised: "$2M",
-    traction: "$500K ARR",
-    founder: {
-      name: "Sarah Chen",
-      title: "CEO & Co-founder",
-      verified: true,
-      bio: "Former engineering lead at Google. Stanford CS PhD."
-    },
-    description: "TechFlow AI is revolutionizing software development with intelligent code generation and automated testing. Our platform helps enterprise teams ship features 10x faster while maintaining code quality.",
-    problem: "Developer productivity has plateaued despite advances in tooling. Teams spend 60% of time on repetitive tasks.",
-    solution: "AI-powered code generation that understands your codebase, patterns, and business logic to automate repetitive work.",
-    market: "The global developer tools market is $30B and growing at 15% annually. Our TAM is $10B in enterprise dev tools.",
-    businessModel: "SaaS subscription model: $99/developer/month for teams of 5+. Enterprise plans start at $10K/year.",
-    team: [
-      { name: "Sarah Chen", role: "CEO", background: "Google, Stanford PhD" },
-      { name: "Marcus Johnson", role: "CTO", background: "Meta, MIT" },
-      { name: "Priya Patel", role: "Head of AI", background: "OpenAI, Berkeley" }
-    ],
-    metrics: {
-      users: "2,000+",
-      arr: "$500K",
-      growth: "40% MoM",
-      retention: "95%"
-    }
-  };
-  const handleRequestAccess = () => {
-    setShowRequestModal(true);
-  };
-  const confirmRequest = () => {
-    setRequestSent(true);
-    setShowRequestModal(false);
-  };
-  const handleUnlock = () => {
-    setHasAccess(true);
-  };
-  return <div className="min-h-screen bg-black">
-      {
-    /* Navigation Bar */
+
+  if (!deal) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <p className="text-white/60">No deal data available.</p>
+      </div>
+    );
   }
-      <nav className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button
-    variant="ghost"
-    size="icon"
-    onClick={() => onNavigate("deal-feed")}
-  >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#01F27B] rounded-lg flex items-center justify-center">
-                <Rocket className="w-5 h-5 text-black" />
-              </div>
-              <span className="text-xl font-semibold">BoostFundr</span>
-            </div>
-          </div>
-          <Button variant="ghost" onClick={onLogout}>
-            Logout
-          </Button>
+
+  // Safely extract nested schema properties
+  const basicInfo    = deal.basicInfo    || {};
+  const story        = deal.story        || {};
+  const execution    = deal.execution    || {};
+  const funding      = deal.funding      || {};
+  const documents    = deal.documents    || {};
+
+  const name     = basicInfo.startupName || "Untitled Deal";
+  const tagline  = basicInfo.tagline     || "";
+  const category = basicInfo.category   || "—";
+  const stage    = basicInfo.stage      || "—";
+  const location = basicInfo.location   || "—";
+  const website  = basicInfo.startupWebsite || null;
+
+  const problem       = story.problem      || "—";
+  const solution      = story.solution     || "—";
+  const market        = story.targetMarket || "—";
+  const whyNow        = story.whyNow       || "—";
+  const vision        = story.vision       || null;
+
+  const businessModel = execution.businessModel || "—";
+  const goToMarket    = execution.goToMarket    || "—";
+  const advantage     = execution.advantage     || "—";
+  const topCompetitor = execution.topCompetitor || "—";
+  const team          = execution.team          || [];
+  const useOfFunds    = execution.useOfFunds    || [];
+
+  const raised  = funding.raisedAmount      || 0;
+  const goal    = funding.goalAmount        || 0;
+  const minInvest = funding.minimumInvestment || 0;
+  const deadline  = funding.deadline        || null;
+
+  const metrics = {
+    users:  execution.users   || funding.users  || "—",
+    arr:    execution.revenue || "—",
+    growth: execution.growthRate || funding.growthRate || "—",
+  };
+
+  const statusMeta   = getStatusMeta(deal.status);
+  const profileScore = deal.profileCompletionScore || 0;
+  const verified     = deal.verificationBadge?.isVerified || false;
+
+  const docLabels = {
+    pitchDeck:               "Pitch Deck",
+    safeAgreement:           "SAFE Agreement",
+    termSheet:               "Term Sheet",
+    registrationCertificate: "Registration Certificate",
+    tradeLicense:            "Trade License",
+    balanceSheet:            "Balance Sheet",
+    revenueProof:            "Revenue Proof",
+    capTable:                "Cap Table",
+    shareholderAgreement:    "Shareholder Agreement",
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Back Header */}
+      <div className="flex items-center gap-4">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={onBack}
+          className="border border-white/10 hover:bg-white/5 text-white/70 hover:text-white rounded-xl"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </Button>
+        <div>
+          <h1 className="text-2xl font-bold">{name}</h1>
+          <p className="text-white/50 text-sm">{tagline || `${category} · ${stage}`}</p>
         </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
-          {
-    /* Main Content */
-  }
-          <div className="lg:col-span-2 space-y-6">
-            {
-    /* Hero Section */
-  }
-            <Card className="bg-gradient-to-br from-[#06120b] to-[#0c0c0c] border-[#01F27B]/20 p-8">
-              <div className="flex items-start gap-6">
-                <div className="w-20 h-20 bg-[#01F27B] rounded-2xl flex items-center justify-center text-4xl flex-shrink-0">
-                  {deal.logo}
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <h1 className="text-3xl font-bold">{deal.name}</h1>
-                    <Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20">
-                      Verified
-                    </Badge>
-                  </div>
-                  <p className="text-xl text-white/70 mb-4">{deal.tagline}</p>
-                  <div className="flex flex-wrap gap-3">
-                    <Badge variant="outline" className="border-white/20">
-                      {deal.category}
-                    </Badge>
-                    <Badge variant="outline" className="border-white/20">
-                      {deal.stage}
-                    </Badge>
-                    <div className="flex items-center gap-1 text-sm text-white/60">
-                      <MapPin className="w-3 h-3" />
-                      {deal.location}
-                    </div>
-                    <div className="flex items-center gap-1 text-sm text-white/60">
-                      <Calendar className="w-3 h-3" />
-                      Founded {deal.founded}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {
-    /* Tabs */
-  }
-            <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="bg-[#0c0c0c] border border-white/10 w-full justify-start">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="traction">Traction</TabsTrigger>
-                <TabsTrigger value="team">Team</TabsTrigger>
-                <TabsTrigger value="documents">Documents</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="overview" className="space-y-6 mt-6">
-                <Card className="bg-[#0c0c0c] border-white/10 p-6">
-                  <h3 className="text-xl font-semibold mb-4">About</h3>
-                  <p className="text-white/70 leading-relaxed">{deal.description}</p>
-                </Card>
-
-                <Card className="bg-[#0c0c0c] border-white/10 p-6">
-                  <h3 className="text-xl font-semibold mb-4">Problem</h3>
-                  <p className="text-white/70 leading-relaxed">{deal.problem}</p>
-                </Card>
-
-                <Card className="bg-[#0c0c0c] border-white/10 p-6">
-                  <h3 className="text-xl font-semibold mb-4">Solution</h3>
-                  <p className="text-white/70 leading-relaxed">{deal.solution}</p>
-                </Card>
-
-                <Card className="bg-[#0c0c0c] border-white/10 p-6">
-                  <h3 className="text-xl font-semibold mb-4">Market Opportunity</h3>
-                  <p className="text-white/70 leading-relaxed">{deal.market}</p>
-                </Card>
-
-                <Card className="bg-[#0c0c0c] border-white/10 p-6">
-                  <h3 className="text-xl font-semibold mb-4">Business Model</h3>
-                  <p className="text-white/70 leading-relaxed">{deal.businessModel}</p>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="traction" className="space-y-6 mt-6">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Card className="bg-gradient-to-br from-[#01F27B]/10 via-[#0c0c0c] to-[#06120b] border-[#01F27B]/20 p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#01F27B]/20 to-transparent rounded-full blur-2xl" />
-                    <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Users className="w-5 h-5 text-[#01F27B]" />
-                      <span className="text-white/60">Users</span>
-                    </div>
-                    <div className="text-3xl font-bold">{deal.metrics.users}</div>
-                    </div>
-                  </Card>
-                  <Card className="bg-gradient-to-br from-[#01F27B]/10 via-[#0c0c0c] to-[#06120b] border-[#01F27B]/20 p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#01F27B]/20 to-transparent rounded-full blur-2xl" />
-                    <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-2">
-                      <DollarSign className="w-5 h-5 text-[#01F27B]" />
-                      <span className="text-white/60">ARR</span>
-                    </div>
-                    <div className="text-3xl font-bold">{deal.metrics.arr}</div>
-                    </div>
-                  </Card>
-                  <Card className="bg-gradient-to-br from-[#01F27B]/10 via-[#0c0c0c] to-[#06120b] border-[#01F27B]/20 p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#01F27B]/20 to-transparent rounded-full blur-2xl" />
-                    <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-2">
-                      <TrendingUp className="w-5 h-5 text-[#01F27B]" />
-                      <span className="text-white/60">Growth</span>
-                    </div>
-                    <div className="text-3xl font-bold">{deal.metrics.growth}</div>
-                    </div>
-                  </Card>
-                  <Card className="bg-gradient-to-br from-[#01F27B]/10 via-[#0c0c0c] to-[#06120b] border-[#01F27B]/20 p-6 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#01F27B]/20 to-transparent rounded-full blur-2xl" />
-                    <div className="relative z-10">
-                    <div className="flex items-center gap-3 mb-2">
-                      <CheckCircle className="w-5 h-5 text-[#01F27B]" />
-                      <span className="text-white/60">Retention</span>
-                    </div>
-                    <div className="text-3xl font-bold">{deal.metrics.retention}</div>
-                    </div>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="team" className="space-y-4 mt-6">
-                {deal.team.map((member, idx) => <Card key={idx} className="bg-[#0c0c0c] border-white/10 p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 bg-[#01F27B]/10 rounded-full flex items-center justify-center text-lg">
-                        {member.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">{member.name}</h4>
-                        <p className="text-white/60 text-sm mb-2">{member.role}</p>
-                        <p className="text-white/50 text-sm">{member.background}</p>
-                      </div>
-                    </div>
-                  </Card>)}
-              </TabsContent>
-
-              <TabsContent value="documents" className="space-y-4 mt-6">
-                {hasAccess ? <>
-                    <Card className="bg-[#0c0c0c] border-white/10 p-6 hover:border-[#01F27B]/30 cursor-pointer transition-all">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Download className="w-5 h-5 text-[#01F27B]" />
-                          <div>
-                            <h4 className="font-semibold">Pitch Deck</h4>
-                            <p className="text-sm text-white/60">Updated April 2026</p>
-                          </div>
-                        </div>
-                        <ExternalLink className="w-4 h-4 text-white/40" />
-                      </div>
-                    </Card>
-                    <Card className="bg-[#0c0c0c] border-white/10 p-6 hover:border-[#01F27B]/30 cursor-pointer transition-all">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <Download className="w-5 h-5 text-[#01F27B]" />
-                          <div>
-                            <h4 className="font-semibold">Financial Model</h4>
-                            <p className="text-sm text-white/60">Q1 2026 projections</p>
-                          </div>
-                        </div>
-                        <ExternalLink className="w-4 h-4 text-white/40" />
-                      </div>
-                    </Card>
-                  </> : <Card className="bg-[#0c0c0c] border-white/10 p-8 text-center relative overflow-hidden">
-                    <div className="absolute inset-0 backdrop-blur-sm bg-black/60" />
-                    <div className="relative z-10">
-                      <Lock className="w-12 h-12 text-[#01F27B] mx-auto mb-4" />
-                      <h4 className="text-xl font-semibold mb-2">Premium Content Locked</h4>
-                      <p className="text-white/60 mb-6">Request access to view pitch deck, financials, and data room</p>
-                      <Button
-    onClick={handleUnlock}
-    className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black"
-  >
-                        Unlock Full Access
-                      </Button>
-                    </div>
-                  </Card>}
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {
-    /* Sticky Sidebar */
-  }
-          <div className="lg:col-span-1">
-            <div className="sticky top-24 space-y-4">
-              <Card className="bg-[#0c0c0c] border-white/10 p-6">
-                <h3 className="font-semibold mb-4">Deal Information</h3>
-                <div className="space-y-3">
-                  <div>
-                    <div className="text-sm text-white/60 mb-1">Total Raised</div>
-                    <div className="text-lg font-semibold text-[#01F27B]">{deal.raised}</div>
-                  </div>
-                  <div className="pt-3 border-t border-white/10">
-                    <div className="text-sm text-white/60 mb-1">Current Traction</div>
-                    <div className="text-lg font-semibold">{deal.traction}</div>
-                  </div>
-                  <div className="pt-3 border-t border-white/10">
-                    <div className="text-sm text-white/60 mb-1">Stage</div>
-                    <Badge variant="outline" className="border-white/20">{deal.stage}</Badge>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="bg-[#0c0c0c] border-white/10 p-6">
-                <h3 className="font-semibold mb-4">Founder</h3>
-                <div className="flex items-start gap-3 mb-4">
-                  <div className="w-12 h-12 bg-[#01F27B]/10 rounded-full flex items-center justify-center">
-                    {deal.founder.name.charAt(0)}
-                  </div>
-                  <div>
-                    <div className="font-medium">{deal.founder.name}</div>
-                    <div className="text-sm text-white/60">{deal.founder.title}</div>
-                  </div>
-                </div>
-                <p className="text-sm text-white/70">{deal.founder.bio}</p>
-              </Card>
-
-              <div className="space-y-3">
-                {requestSent ? <div className="p-4 bg-[#01F27B]/10 border border-[#01F27B]/20 rounded-xl text-center">
-                    <CheckCircle className="w-6 h-6 text-[#01F27B] mx-auto mb-2" />
-                    <p className="text-sm text-[#01F27B]">Request sent! The founder will review it.</p>
-                  </div> : <Button
-    onClick={handleRequestAccess}
-    className="w-full bg-[#01F27B] hover:bg-[#01F27B]/90 text-black h-12"
-  >
-                    Request Access
-                  </Button>}
-                <Button
-    variant="outline"
-    className="w-full border-white/20 hover:bg-white/5"
-  >
-                  Save Deal
-                </Button>
-              </div>
-            </div>
-          </div>
+        <div className="ml-auto flex items-center gap-3">
+          <Badge className={`border ${statusMeta.className}`}>{statusMeta.label}</Badge>
+          {verified && (
+            <Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20">Verified</Badge>
+          )}
         </div>
       </div>
 
-      {
-    /* Request Access Modal */
-  }
+      {/* Hero Card */}
+      <Card className="bg-gradient-to-br from-[#06120b] to-[#0c0c0c] border-[#01F27B]/20 p-6 md:p-8">
+        <div className="flex items-start gap-6">
+          <div className="w-20 h-20 bg-black/60 border border-white/10 rounded-2xl flex items-center justify-center text-4xl flex-shrink-0 overflow-hidden">
+            {basicInfo.startupLogo
+              ? <img src={basicInfo.startupLogo} alt={name} className="w-full h-full object-cover" />
+              : "🚀"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-wrap gap-2 mb-3">
+              <Badge variant="outline" className="border-white/20">{category}</Badge>
+              <Badge variant="outline" className="border-white/20">{stage}</Badge>
+              {location !== "—" && (
+                <span className="flex items-center gap-1 text-xs text-white/50">
+                  <MapPin className="w-3 h-3" />{location}
+                </span>
+              )}
+              {website && (
+                <a href={website} target="_blank" rel="noreferrer"
+                  className="text-xs text-[#01F27B] hover:underline flex items-center gap-1">
+                  <ExternalLink className="w-3 h-3" /> Website
+                </a>
+              )}
+            </div>
+
+            {/* Profile Completion */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#01F27B] rounded-full transition-all duration-700"
+                  style={{ width: `${profileScore}%` }}
+                />
+              </div>
+              <span className="text-xs text-[#01F27B] font-semibold min-w-[36px]">{profileScore}%</span>
+              <span className="text-xs text-white/40">Profile Complete</span>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Funding Stats Row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+          { label: "Raised", value: formatCurrency(raised), icon: DollarSign },
+          { label: "Goal",   value: formatCurrency(goal),   icon: TrendingUp },
+          { label: "Min. Investment", value: formatCurrency(minInvest), icon: CheckCircle },
+          { label: "Deadline", value: deadline ? new Date(deadline).toLocaleDateString("en-US", { month:"short", day:"2-digit", year:"numeric" }) : "—", icon: Users },
+        ].map(({ label, value, icon: Icon }) => (
+          <Card key={label} className="bg-[#0c0c0c] border-white/5 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Icon className="w-4 h-4 text-[#01F27B]" />
+              <span className="text-xs text-white/50">{label}</span>
+            </div>
+            <p className="text-lg font-semibold text-white">{value}</p>
+          </Card>
+        ))}
+      </div>
+
+      {/* Main Tabs */}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="bg-[#0c0c0c] border border-white/10 w-full justify-start flex-wrap h-auto gap-1 p-1">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="execution">Execution</TabsTrigger>
+          <TabsTrigger value="team">Team</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+        </TabsList>
+
+        {/* Overview */}
+        <TabsContent value="overview" className="space-y-4 mt-6">
+          {[
+            { title: "The Problem",     body: problem  },
+            { title: "The Solution",    body: solution },
+            { title: "Target Market",   body: market   },
+            { title: "Why Now?",        body: whyNow   },
+            ...(vision ? [{ title: "Long-term Vision", body: vision }] : []),
+            { title: "Business Model",  body: businessModel },
+          ].map(({ title, body }) => (
+            <Card key={title} className="bg-[#0c0c0c] border-white/10 p-5">
+              <h3 className="text-sm font-semibold text-[#01F27B] mb-2">{title}</h3>
+              <p className="text-white/70 text-sm leading-relaxed">{body}</p>
+            </Card>
+          ))}
+        </TabsContent>
+
+        {/* Execution */}
+        <TabsContent value="execution" className="space-y-4 mt-6">
+          <div className="grid md:grid-cols-3 gap-4">
+            {[
+              { label: "Users / Customers", value: metrics.users,  icon: Users      },
+              { label: "Current ARR / Revenue", value: typeof metrics.arr === "number" ? formatCurrency(metrics.arr) : metrics.arr, icon: DollarSign },
+              { label: "Growth Rate (MoM)",  value: metrics.growth !== "—" ? `${metrics.growth}%` : "—", icon: TrendingUp },
+            ].map(({ label, value, icon: Icon }) => (
+              <Card key={label} className="bg-gradient-to-br from-[#01F27B]/10 to-[#0c0c0c] border-[#01F27B]/20 p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <Icon className="w-4 h-4 text-[#01F27B]" />
+                  <span className="text-xs text-white/60">{label}</span>
+                </div>
+                <p className="text-2xl font-bold">{value}</p>
+              </Card>
+            ))}
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            {[
+              { label: "Go-to-Market Strategy", value: goToMarket    },
+              { label: "Unfair Advantage",       value: advantage     },
+              { label: "Top Competitor",         value: topCompetitor },
+            ].map(({ label, value }) => (
+              <Card key={label} className="bg-[#0c0c0c] border-white/10 p-5">
+                <h4 className="text-xs text-white/50 mb-1">{label}</h4>
+                <p className="text-white/80 text-sm">{value}</p>
+              </Card>
+            ))}
+          </div>
+
+          {useOfFunds.length > 0 && (
+            <Card className="bg-[#0c0c0c] border-white/10 p-5">
+              <h4 className="text-sm font-semibold text-[#01F27B] mb-4">Use of Funds</h4>
+              <div className="space-y-4">
+                {useOfFunds.map((item, i) => (
+                  <div key={i}>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-medium text-white/70">{item.category || `Allocation ${i + 1}`}</span>
+                      <span className="text-xs font-semibold text-[#01F27B]">{item.percentage}%</span>
+                    </div>
+                    <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-[#01F27B] to-[#01F27B]/70 rounded-full"
+                        style={{ width: `${item.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Team */}
+        <TabsContent value="team" className="space-y-4 mt-6">
+          {team.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {team.map((member, idx) => (
+                <Card key={idx} className="bg-[#0c0c0c] border-white/10 p-5">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 bg-[#01F27B]/10 rounded-full flex items-center justify-center font-bold text-[#01F27B] text-lg shrink-0">
+                      {member.name?.charAt(0)?.toUpperCase() || (idx + 1)}
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-white">{member.name || "Unnamed Member"}</h4>
+                      <p className="text-sm text-white/50 mt-0.5">{member.role || "Team Member"}</p>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <Card className="bg-[#0c0c0c] border-white/10 p-8 text-center">
+              <p className="text-white/40 text-sm">No team members added yet.</p>
+            </Card>
+          )}
+        </TabsContent>
+
+        {/* Documents */}
+        <TabsContent value="documents" className="mt-6">
+          {hasAccess ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {Object.entries(documents).map(([key, url]) => {
+                if (!url) return null;
+                const label = docLabels[key] || key;
+                return (
+                  <Card
+                    key={key}
+                    onClick={() => window.open(url, "_blank")}
+                    className="bg-[#0c0c0c] border-white/10 p-5 hover:border-[#01F27B]/40 cursor-pointer transition-all group flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#01F27B]/10 rounded-lg flex items-center justify-center group-hover:bg-[#01F27B]/20 transition-all">
+                        <FileText className="w-5 h-5 text-[#01F27B]" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm">{label}</h4>
+                        <p className="text-[10px] text-white/40 uppercase tracking-wider">PDF · Click to open</p>
+                      </div>
+                    </div>
+                    <ExternalLink className="w-4 h-4 text-white/30 group-hover:text-[#01F27B] transition-all" />
+                  </Card>
+                );
+              })}
+              {Object.keys(documents).length === 0 && (
+                <p className="text-white/40 text-sm col-span-2">No documents uploaded yet.</p>
+              )}
+            </div>
+          ) : (
+            <Card className="bg-[#0c0c0c] border-white/10 p-10 text-center">
+              <Lock className="w-12 h-12 text-[#01F27B] mx-auto mb-4 opacity-60" />
+              <h4 className="text-lg font-semibold mb-2">Documents Locked</h4>
+              <p className="text-white/50 text-sm mb-6">Request access to view the data room documents.</p>
+              {requestSent ? (
+                <div className="flex items-center justify-center gap-2 text-[#01F27B]">
+                  <CheckCircle className="w-5 h-5" />
+                  <span className="text-sm">Request sent! Awaiting founder approval.</span>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => setShowRequestModal(true)}
+                  className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black font-semibold"
+                >
+                  Request Access
+                </Button>
+              )}
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Request Access Modal */}
       <Dialog open={showRequestModal} onOpenChange={setShowRequestModal}>
         <DialogContent className="bg-[#0c0c0c] border-white/10">
           <DialogHeader>
-            <DialogTitle>Request Access to {deal.name}</DialogTitle>
+            <DialogTitle>Request Access to {name}</DialogTitle>
             <DialogDescription className="text-white/60">
-              Send a connection request to the founder. They will review your profile and respond.
+              Your investor profile will be shared with the founder for review.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 mt-4">
-            <div className="p-4 bg-[#01F27B]/10 border border-[#01F27B]/20 rounded-xl">
-              <p className="text-sm text-white/80">
-                Your investor profile will be shared with the founder, including your investment history and areas of interest.
-              </p>
-            </div>
-            <div className="flex gap-3">
-              <Button
-    variant="outline"
-    onClick={() => setShowRequestModal(false)}
-    className="flex-1 border-white/20"
-  >
-                Cancel
-              </Button>
-              <Button
-    onClick={confirmRequest}
-    className="flex-1 bg-[#01F27B] hover:bg-[#01F27B]/90 text-black"
-  >
-                Send Request
-              </Button>
-            </div>
+          <div className="flex gap-3 mt-4">
+            <Button variant="outline" onClick={() => setShowRequestModal(false)} className="flex-1 border-white/20">
+              Cancel
+            </Button>
+            <Button
+              onClick={() => { setRequestSent(true); setShowRequestModal(false); }}
+              className="flex-1 bg-[#01F27B] hover:bg-[#01F27B]/90 text-black"
+            >
+              Send Request
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
-    </div>;
+    </div>
+  );
 }

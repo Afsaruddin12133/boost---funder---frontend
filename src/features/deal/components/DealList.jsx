@@ -16,7 +16,7 @@ import { useDeleteDeal, useMyDeals } from "../hooks";
 import DealCard from "./DealCard";
 import DealTable from "./DealTable";
 
-export default function DealList({ onNavigate, onEdit }) {
+export default function DealList({ onNavigate, onEdit, onView }) {
   const { data: deals = [], isLoading, isError, error, refetch } = useMyDeals();
   const deleteDeal = useDeleteDeal();
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -71,15 +71,7 @@ export default function DealList({ onNavigate, onEdit }) {
 
   return (
     <div className="w-full">
-      <div className="hidden md:block">
-        <DealTable
-          deals={deals}
-          onNavigate={onNavigate}
-          onRequestDelete={setDeleteTarget}
-          onEdit={onEdit}
-        />
-      </div>
-      <div className="md:hidden space-y-4 p-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {deals.map((deal) => (
           <DealCard
             key={deal.id ?? deal._id}
@@ -87,6 +79,7 @@ export default function DealList({ onNavigate, onEdit }) {
             onNavigate={onNavigate}
             onRequestDelete={setDeleteTarget}
             onEdit={onEdit}
+            onView={onView}
           />
         ))}
       </div>

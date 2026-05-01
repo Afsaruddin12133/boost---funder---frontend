@@ -89,6 +89,26 @@ const api = {
     });
     return handleResponse(response);
   },
+
+  async patch(endpoint, body = {}, options = {}) {
+    const isFormData = body instanceof FormData;
+    const response = await fetch(`${BASE_URL}${endpoint}`, {
+      method: "PATCH",
+      headers: {
+        ...(isFormData ? {} : { "Content-Type": "application/json" }),
+        ...getAuthHeader(),
+        ...(options.headers
+          ? Object.fromEntries(
+              Object.entries(options.headers).filter(
+                ([k]) => !(isFormData && k.toLowerCase() === "content-type")
+              )
+            )
+          : {}),
+      },
+      body: isFormData ? body : JSON.stringify(body),
+    });
+    return handleResponse(response);
+  },
 };
 
 export default api;

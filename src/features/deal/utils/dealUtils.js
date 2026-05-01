@@ -22,9 +22,12 @@ export const normalizeDealList = (data) =>
   resolveDealList(data).map(normalizeDeal).filter(Boolean);
 
 export const getDealName = (deal) =>
-  deal?.startupName || deal?.name || "Untitled deal";
+  deal?.basicInfo?.startupName || deal?.startupName || deal?.name || "Untitled deal";
 
-export const getDealMedia = (deal) => (Array.isArray(deal?.media) ? deal.media : []);
+export const getDealMedia = (deal) => {
+  if (deal?.basicInfo?.startupLogo) return [deal.basicInfo.startupLogo];
+  return Array.isArray(deal?.media) ? deal.media : [];
+};
 
 export const toNumber = (value) => {
   const number = Number(value);

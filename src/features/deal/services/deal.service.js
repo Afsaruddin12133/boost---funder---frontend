@@ -36,3 +36,8 @@ export const updateDeal = async (id, formData) => {
   return unwrap(response);
 };
 
+export const patchDeal = async (id, data) => {
+  const response = await api.patch(`/api/v1/deals/${id}`, data);
+  return unwrap(response);
+};
+

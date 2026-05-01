@@ -1,4 +1,8 @@
 import { DealList, CreateDealForm } from "@/features/deal";
+import DealDetailPage from "@/features/deal/components/DealDetailPage";
+import FounderVerificationPage from "@/features/verification/components/FounderVerificationPage";
+import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
+import FounderProfilePage from "@/features/profile/components/FounderProfilePage";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
@@ -83,18 +87,33 @@ function OverviewCards() {
 }
 
 function ProfileSection() {
+  const { data: verStatus } = useVerificationStatus();
+  const isVerified = verStatus?.status === "approved";
+
   return (
     <Card className="bg-[#0c0c0c] border-white/5 p-6 md:p-8 flex flex-col justify-between">
       <div className="flex flex-col md:flex-row gap-6 mb-8">
-        <div className="w-24 h-24 shrink-0 bg-black border border-white/10 rounded-2xl flex items-center justify-center">
-          <div className="text-[#01F27B]">
-            <Rocket className="w-10 h-10" />
+        <div className="relative w-24 h-24 shrink-0">
+          <div className="w-24 h-24 bg-black border border-white/10 rounded-2xl flex items-center justify-center">
+            <div className="text-[#01F27B]">
+              <Rocket className="w-10 h-10" />
+            </div>
           </div>
+          {isVerified && (
+            <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-[#01F27B] rounded-full border-2 border-[#0c0c0c] flex items-center justify-center shadow-[0_0_12px_rgba(1,242,123,0.6)]">
+              <CheckCircle className="w-3.5 h-3.5 text-black" />
+            </div>
+          )}
         </div>
         <div>
           <div className="flex items-center gap-3 mb-2">
             <h2 className="text-2xl font-semibold">EcoPulse Solutions</h2>
             <Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20 rounded-full">GreenTech</Badge>
+            {isVerified && (
+              <Badge className="bg-[#01F27B] text-black border-[#01F27B] rounded-full text-[10px] font-bold flex items-center gap-1">
+                <CheckCircle className="w-3 h-3" /> Verified
+              </Badge>
+            )}
           </div>
           <p className="text-white/60 text-sm leading-relaxed max-w-2xl">
             Pioneering modular carbon capture systems for medium-scale industrial manufacturing plants. 
@@ -249,6 +268,7 @@ function MainDashboard({ onNavigate }) {
 function MyDealsPage({ onNavigate }) {
   const [showCreate, setShowCreate] = useState(false);
   const [editingDeal, setEditingDeal] = useState(null);
+  const [viewingDeal, setViewingDeal] = useState(null);
 
   if (showCreate || editingDeal) {
     return (
@@ -262,6 +282,16 @@ function MyDealsPage({ onNavigate }) {
           setShowCreate(false);
           setEditingDeal(null);
         }}
+      />
+    );
+  }
+
+  if (viewingDeal) {
+    return (
+      <DealDetailPage
+        deal={viewingDeal}
+        onBack={() => setViewingDeal(null)}
+        userRole="founder"
       />
     );
   }
@@ -283,7 +313,7 @@ function MyDealsPage({ onNavigate }) {
       </div>
 
       {/* Deal List */}
-      <DealList onNavigate={onNavigate} onEdit={setEditingDeal} />
+      <DealList onNavigate={onNavigate} onEdit={setEditingDeal} onView={setViewingDeal} />
     </div>
   );
 }
@@ -292,12 +322,8 @@ export default function FounderDashboard({ onNavigate }) {
   return (
     <Routes>
       <Route path="/" element={<MainDashboard onNavigate={onNavigate} />} />
-      <Route path="/profile" element={
-        <div className="space-y-6 max-w-4xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">My Startup Profile</h1>
-          <ProfileSection />
-        </div>
-      } />
+      <Route path="/profile" element={<FounderProfilePage />} />
+
       <Route path="/deals" element={<MyDealsPage onNavigate={onNavigate} />} />
       <Route path="/analytics" element={
         <div className="space-y-6 max-w-4xl mx-auto">
@@ -308,12 +334,7 @@ export default function FounderDashboard({ onNavigate }) {
           </div>
         </div>
       } />
-      <Route path="/verification" element={
-        <div className="space-y-6 max-w-2xl mx-auto">
-          <h1 className="text-3xl font-bold mb-6">Verification</h1>
-          <VerificationSection />
-        </div>
-      } />
+      <Route path="/verification" element={<FounderVerificationPage />} />
       <Route path="/subscription" element={
         <div className="space-y-6 max-w-md mx-auto">
           <h1 className="text-3xl font-bold mb-6">Subscription</h1>
