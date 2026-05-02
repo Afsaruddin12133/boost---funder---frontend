@@ -44,6 +44,13 @@ export default function App() {
   const { role, logout, isAuthenticated } = useAuth();
 
   const navigate = (page, dealId) => {
+    // If the 'page' starts with a slash or contains one, treat as direct path
+    if (typeof page === 'string' && (page.includes('/') || page.includes('?'))) {
+      const targetPath = page.startsWith('/') ? page : `/${page}`;
+      rNavigate(targetPath);
+      return;
+    }
+
     const routes = {
       landing: "/",
       auth: "/login",
@@ -52,6 +59,7 @@ export default function App() {
       "founder-dashboard": "/dashboard/founder",
       subscription: "/subscription",
     };
+
     if (page === "deal-detail" && dealId !== undefined) {
       rNavigate(`/deals/${dealId}`);
     } else if (routes[page]) {

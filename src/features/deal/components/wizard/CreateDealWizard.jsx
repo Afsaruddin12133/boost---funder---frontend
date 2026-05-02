@@ -32,7 +32,17 @@ const INITIAL_DATA = {
 };
 
 export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
-  const [currentStep, setCurrentStep] = useState(1);
+  // Smart Resumption: Map completion score to the correct starting step
+  const getInitialStep = (score) => {
+    if (!score || score < 20) return 1;
+    if (score < 40) return 2;
+    if (score < 60) return 3;
+    if (score < 80) return 4;
+    if (score < 100) return 5;
+    return 1; // If 100%, start from beginning for review or just Step 1
+  };
+
+  const [currentStep, setCurrentStep] = useState(getInitialStep(initialData?.profileCompletionScore || 0));
   const [dealId, setDealId] = useState(initialData?._id || initialData?.id || null);
   const [data, setData] = useState({ ...INITIAL_DATA, ...initialData });
   const [errors, setErrors] = useState({});
@@ -206,22 +216,31 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
   }[currentStep];
 
   return (
-    <div className="max-w-3xl mx-auto w-full">
-      <ProgressBar score={profileScore} />
-      
-      <StepIndicator steps={STEPS} currentStep={currentStep} />
+    <div className="max-w-6xl mx-auto w-full h-full flex flex-col gap-6 lg:h-[calc(100vh-160px)]">
+      {/* Box 1: Progress & Navigation */}
+      <Card className="flex-none bg-[#0a0f0c]/90 backdrop-blur-xl border-white/10 rounded-[2rem] shadow-[0_0_50px_rgba(1,242,123,0.03)] p-6 lg:p-8">
+        <div className="space-y-6">
+          <ProgressBar score={profileScore} />
+          <StepIndicator steps={STEPS} currentStep={currentStep} />
+        </div>
+      </Card>
 
-      <Card className="bg-[#0a0f0c]/90 backdrop-blur-xl border-white/10 rounded-2xl shadow-[0_0_50px_rgba(1,242,123,0.03)] overflow-hidden flex flex-col">
-        <div className="p-8 flex-1 overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-white/10 max-h-[60vh]">
-          <StepContent data={data} onChange={onChange} errors={errors} />
+      {/* Box 2: Form Content & Actions */}
+      <Card className="flex-1 bg-[#0a0f0c]/90 backdrop-blur-xl border-white/10 rounded-[2rem] shadow-[0_0_50px_rgba(1,242,123,0.05)] overflow-hidden flex flex-col min-h-0">
+        {/* Scrollable Content Area */}
+        <div className="flex-1 overflow-y-auto scrollbar-none px-6 lg:px-10 py-8">
+          <div className="max-w-4xl mx-auto">
+            <StepContent data={data} onChange={onChange} errors={errors} />
+          </div>
         </div>
 
+        {/* Footer Actions */}
         <div className="p-6 border-t border-white/5 bg-black/40 flex items-center justify-between">
           <Button
             variant="ghost"
             onClick={() => onCancel?.()}
             disabled={isSaving}
-            className="text-white/40 hover:text-white hover:bg-red-500/10 hover:text-red-400 h-12 px-6 rounded-xl transition-all"
+            className="text-white/40 hover:text-white hover:bg-red-500/10 hover:text-red-400 h-12 px-6 rounded-xl transition-all font-medium"
           >
             Cancel
           </Button>
@@ -242,7 +261,7 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
             <Button
               onClick={handleNext}
               disabled={isSaving}
-              className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black font-semibold h-12 px-8 rounded-xl shadow-[0_0_20px_rgba(1,242,123,0.2)] hover:shadow-[0_0_30px_rgba(1,242,123,0.3)] transition-all flex items-center gap-2"
+              className="bg-gradient-to-r from-[#01F27B] to-[#00d66d] hover:opacity-90 text-black font-bold h-12 px-10 rounded-xl shadow-[0_0_25px_rgba(1,242,123,0.3)] transition-all flex items-center gap-2 border-0"
             >
               {isSaving ? (
                 <>

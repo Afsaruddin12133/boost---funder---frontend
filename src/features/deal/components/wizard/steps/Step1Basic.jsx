@@ -1,99 +1,161 @@
-import React from 'react';
+import { Input } from "@/shared/ui/input";
+import { Briefcase, Globe, Layers, MapPin, Rocket, Tag } from 'lucide-react';
 import Field from '../ui/Field';
 import FileUploader from '../ui/FileUploader';
-import { Input } from "@/shared/ui/input";
-import { Rocket, Tag, Globe, MapPin, Layers, Briefcase } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/shared/ui/select";
 
-const CATEGORIES = ["tech", "health", "finance", "education", "cleantech", "ecommerce", "saas", "other"];
-const STAGES = ["idea", "MVP", "growth", "scale"];
+const CATEGORIES = [
+  { id: "tech", label: "Technology" },
+  { id: "health", label: "Healthcare" },
+  { id: "finance", label: "Fintech" },
+  { id: "education", label: "EdTech" },
+  { id: "cleantech", label: "Sustainability" },
+  { id: "ecommerce", label: "E-Commerce" },
+  { id: "saas", label: "SaaS" },
+  { id: "other", label: "Other" }
+];
+
+const STAGES = [
+  { id: "idea", label: "Idea / Pre-seed" },
+  { id: "MVP", label: "MVP / Seed" },
+  { id: "growth", label: "Early Growth (Series A+)" },
+  { id: "scale", label: "Scaling (Series B+)" }
+];
 
 export default function Step1Basic({ data, onChange, errors }) {
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-[#01F27B]/10 border border-[#01F27B]/20 rounded-xl p-4 flex items-start gap-3">
-        <Rocket className="w-5 h-5 text-[#01F27B] shrink-0 mt-0.5" />
-        <p className="text-sm text-[#01F27B] font-medium leading-relaxed">
-          Start strong — investors first notice your basics.
-        </p>
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Motivational Quote */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#01F27B]/5 border border-[#01F27B]/10 p-5 group">
+        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <Rocket className="w-12 h-12 text-[#01F27B]" />
+        </div>
+        <div className="relative z-10 flex items-start gap-4">
+          <div className="mt-1 flex-none w-1 h-10 bg-gradient-to-b from-[#01F27B] to-transparent rounded-full" />
+          <div>
+            <h4 className="text-sm font-black text-[#01F27B] uppercase tracking-tighter mb-1">Founder's Mission</h4>
+            <p className="text-sm text-white/70 italic leading-relaxed">
+              "Your brand is the handshake that starts every investor meeting. Let's make it legendary."
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="space-y-5">
-        <Field label="Startup Name" icon={Rocket} error={errors.startupName} required>
-          <Input
-            placeholder="e.g. EcoPulse Solutions"
-            value={data.startupName || ""}
-            onChange={(e) => onChange("startupName", e.target.value)}
-            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
-          />
-        </Field>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch">
+        {/* Startup Logo Area with Frame */}
+        <div className="lg:col-span-1">
+          <Field label="Startup Logo" icon={Briefcase} error={errors.startupLogo} required>
+            <div className="mt-2 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-[#01F27B]/30 transition-all flex items-center justify-start h-[90px]">
+              <FileUploader 
+                files={data.startupLogo ? [data.startupLogo] : []}
+                onChange={(files) => onChange("startupLogo", files[0] || null)}
+                accept="image/*"
+                variant="compact"
+                maxFiles={1}
+              />
+            </div>
+          </Field>
+        </div>
 
-        <Field label="Startup Logo" icon={Briefcase} error={errors.startupLogo} required>
-          <FileUploader 
-            files={data.startupLogo ? [data.startupLogo] : []}
-            onChange={(files) => onChange("startupLogo", files[0] || null)}
-            accept="image/*"
-            label="Upload your logo"
-            maxFiles={1}
-          />
-        </Field>
+        {/* Startup Name Area */}
+        <div className="lg:col-span-1 flex flex-col justify-end">
+          <Field label="Startup Name" icon={Rocket} error={errors.startupName} required>
+            <Input
+              placeholder="What is your startup called?"
+              value={data.startupName || ""}
+              onChange={(e) => onChange("startupName", e.target.value)}
+              className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
+            />
+          </Field>
+        </div>
+      </div>
 
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Field label="Startup Website" icon={Globe} error={errors.startupWebsite} required>
           <Input
             placeholder="https://yourstartup.com"
             value={data.startupWebsite || ""}
             onChange={(e) => onChange("startupWebsite", e.target.value)}
-            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
           />
         </Field>
-
-        <Field label="Tagline" icon={Tag} error={errors.tagline}>
-          <Input
-            placeholder="A catchy one-liner for your brand"
-            value={data.tagline || ""}
-            onChange={(e) => onChange("tagline", e.target.value)}
-            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
-          />
-        </Field>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <Field label="Category" icon={Layers} error={errors.category} required>
-            <select
-              value={data.category || ""}
-              onChange={(e) => onChange("category", e.target.value)}
-              className="w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white px-3 text-sm focus:outline-none focus:border-[#01F27B]/50 appearance-none cursor-pointer"
-            >
-              <option value="" disabled className="bg-[#0c0c0c]">Select category</option>
-              {CATEGORIES.map(c => (
-                <option key={c} value={c} className="bg-[#0c0c0c]">
-                  {c.charAt(0).toUpperCase() + c.slice(1)}
-                </option>
-              ))}
-            </select>
-          </Field>
-
-          <Field label="Stage" icon={Briefcase} error={errors.stage} required>
-            <select
-              value={data.stage || ""}
-              onChange={(e) => onChange("stage", e.target.value)}
-              className="w-full h-11 rounded-xl bg-white/5 border border-white/10 text-white px-3 text-sm focus:outline-none focus:border-[#01F27B]/50 appearance-none cursor-pointer"
-            >
-              <option value="" disabled className="bg-[#0c0c0c]">Select stage</option>
-              {STAGES.map(s => (
-                <option key={s} value={s} className="bg-[#0c0c0c]">
-                  {s.charAt(0).toUpperCase() + s.slice(1)}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
 
         <Field label="Location" icon={MapPin} error={errors.location} required>
           <Input
-            placeholder="e.g. San Francisco, CA"
+            placeholder="e.g. San Francisco, USA"
             value={data.location || ""}
             onChange={(e) => onChange("location", e.target.value)}
-            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
           />
+        </Field>
+      </div>
+
+      <Field label="Tagline" icon={Tag} error={errors.tagline}>
+        <Input
+          placeholder="Describe your mission in one powerful sentence"
+          value={data.tagline || ""}
+          onChange={(e) => onChange("tagline", e.target.value)}
+          className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
+        />
+      </Field>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+        <div className="space-y-4">
+          <Field label="Category" icon={Layers} error={errors.category} required>
+            <Select 
+              value={data.category} 
+              onValueChange={(val) => onChange("category", val)}
+            >
+              <SelectTrigger className="bg-white/5 border-white/10 text-white h-11 lg:h-12 rounded-xl focus:border-[#01F27B]/50">
+                <SelectValue placeholder="Select industry category" />
+              </SelectTrigger>
+              <SelectContent className="bg-[#0c0c0c] border-white/10 text-white">
+                {CATEGORIES.map(c => (
+                  <SelectItem key={c.id} value={c.id} className="hover:bg-[#01F27B]/10 focus:bg-[#01F27B]/10 cursor-pointer">
+                    {c.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+
+          {/* Conditional Other Category Field */}
+          {data.category === "other" && (
+            <div className="animate-in slide-in-from-top-2 duration-300">
+              <Field label="Custom Category" icon={Tag} error={errors.customCategory} required>
+                <Input
+                  placeholder="What is your industry?"
+                  value={data.customCategory || ""}
+                  onChange={(e) => onChange("customCategory", e.target.value)}
+                  className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
+                />
+              </Field>
+            </div>
+          )}
+        </div>
+
+        <Field label="Stage" icon={Briefcase} error={errors.stage} required>
+          <Select 
+            value={data.stage} 
+            onValueChange={(val) => onChange("stage", val)}
+          >
+            <SelectTrigger className="bg-white/5 border-white/10 text-white h-11 lg:h-12 rounded-xl focus:border-[#01F27B]/50">
+              <SelectValue placeholder="Current startup stage" />
+            </SelectTrigger>
+            <SelectContent className="bg-[#0c0c0c] border-white/10 text-white">
+              {STAGES.map(s => (
+                <SelectItem key={s.id} value={s.id} className="hover:bg-[#01F27B]/10 focus:bg-[#01F27B]/10 cursor-pointer">
+                  {s.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </Field>
       </div>
     </div>

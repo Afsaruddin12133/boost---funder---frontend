@@ -7,11 +7,20 @@ import { Users, Briefcase, Zap, Shield, PieChart } from 'lucide-react';
 export default function Step4Execution({ data, onChange, errors }) {
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-[#01F27B]/10 border border-[#01F27B]/20 rounded-xl p-4 flex items-start gap-3">
-        <Users className="w-5 h-5 text-[#01F27B] shrink-0 mt-0.5" />
-        <p className="text-sm text-[#01F27B] font-medium leading-relaxed">
-          Strong teams get funded faster. Highlight your execution strategy.
-        </p>
+      {/* Premium Motivational Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#01F27B]/5 border border-[#01F27B]/10 p-5 group mb-8">
+        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <Zap className="w-12 h-12 text-[#01F27B]" />
+        </div>
+        <div className="relative z-10 flex items-start gap-4">
+          <div className="mt-1 flex-none w-1 h-10 bg-gradient-to-b from-[#01F27B] to-transparent rounded-full" />
+          <div>
+            <h4 className="text-sm font-black text-[#01F27B] uppercase tracking-tighter mb-1">Founder's Execution</h4>
+            <p className="text-sm text-white/70 italic leading-relaxed">
+              "Execution is everything. Ideas are cheap, but the team that delivers is worth its weight in gold."
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-5">

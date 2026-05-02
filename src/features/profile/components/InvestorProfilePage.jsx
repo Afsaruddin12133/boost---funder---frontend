@@ -19,11 +19,7 @@ export default function InvestorProfilePage() {
   
   const { data: verStatus } = useVerificationStatus();
   const { user: authUser } = useAuth();
-  
-  console.log("[InvestorProfilePage] authUser:", authUser);
-  console.log("[InvestorProfilePage] verStatus:", verStatus);
-  
-  const isVerified = verStatus?.status === "approved" && authUser?.isVerified !== false;
+  const isVerified = verStatus?.status === "approved" && authUser?.isVerified === true;
   
   // For avatar upload
   const [imageFile, setImageFile] = useState(null);

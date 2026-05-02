@@ -13,11 +13,20 @@ export default function Step2Story({ data, onChange, errors }) {
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="bg-[#01F27B]/10 border border-[#01F27B]/20 rounded-xl p-4 flex items-start gap-3">
-        <Lightbulb className="w-5 h-5 text-[#01F27B] shrink-0 mt-0.5" />
-        <p className="text-sm text-[#01F27B] font-medium leading-relaxed">
-          A clear story increases investor interest by 3x.
-        </p>
+      {/* Premium Motivational Banner */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#01F27B]/5 border border-[#01F27B]/10 p-5 group mb-8">
+        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+          <Lightbulb className="w-12 h-12 text-[#01F27B]" />
+        </div>
+        <div className="relative z-10 flex items-start gap-4">
+          <div className="mt-1 flex-none w-1 h-10 bg-gradient-to-b from-[#01F27B] to-transparent rounded-full" />
+          <div>
+            <h4 className="text-sm font-black text-[#01F27B] uppercase tracking-tighter mb-1">Founder's Narrative</h4>
+            <p className="text-sm text-white/70 italic leading-relaxed">
+              "Data tells, but stories sell. Your vision is the bridge between a good idea and a great investment."
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-5">
