@@ -1,23 +1,59 @@
-import React from "react";
-import { useLocation, useNavigate } from "react-router";
 import {
-  LayoutDashboard, Building, Briefcase, LineChart,
-  ShieldCheck, CreditCard, Settings, Compass,
-  Bookmark, PieChart, Search, Bell, Plus, LogOut
+  Bell,
+  Bookmark,
+  Briefcase,
+  Building,
+  Compass,
+  CreditCard,
+  LayoutDashboard,
+  LineChart,
+  LogOut,
+  Plus,
+  Search,
+  Settings,
+  ShieldCheck
 } from "lucide-react";
+import { useEffect } from "react";
+import toast from "react-hot-toast";
+import { useLocation, useNavigate, useSearchParams } from "react-router";
 
-import {
-  SidebarProvider, Sidebar, SidebarContent, SidebarHeader, SidebarMenu,
-  SidebarMenuItem, SidebarMenuButton, SidebarFooter, SidebarInset, SidebarTrigger
-} from "@/shared/ui/sidebar";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
-import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
+import {
+  Sidebar, SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarTrigger
+} from "@/shared/ui/sidebar";
 
 export default function DashboardLayout({ children, userRole, onNavigate, onLogout }) {
+  const { user: authUser } = useAuth();
   const location = useLocation();
   const currentPath = location.pathname;
   const navigateRouter = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  // Watch for payment gateway redirects
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+
+    if (paymentStatus === 'success') {
+      toast.success('Payment successful! Your subscription is now active. 🎉', { duration: 5000 });
+      // Remove query param without triggering full reload
+      navigateRouter(currentPath, { replace: true });
+    } else if (paymentStatus === 'failed') {
+      toast.error('Payment failed or was canceled. Please try again.', { duration: 5000 });
+      // Remove query param
+      navigateRouter(currentPath, { replace: true });
+    }
+  }, [searchParams, navigateRouter, currentPath]);
 
   const founderNav = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/founder" },
@@ -112,18 +148,14 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
           </div>
 
           <div className="flex items-center gap-6">
-            <button className="relative text-white/70 hover:text-white transition-colors">
-              <Bell className="w-5 h-5" />
-              <span className="absolute 0 right-0 w-2 h-2 bg-[#01F27B] rounded-full border border-[#0c0c0c]" />
-            </button>
-            <div className="flex items-center gap-3 pl-6 border-l border-white/10">
+            <div className="flex items-center gap-3 pl-6">
               <div className="hidden md:flex flex-col items-end">
-                <span className="text-sm font-medium text-white">Alex Chen</span>
-                <span className="text-xs text-[#01F27B]">Pro {userRole === "founder" ? "Founder" : "Investor"}</span>
+                <span className="text-sm font-medium text-white">{authUser?.firstName} {authUser?.lastName}</span>
+                <span className="text-xs text-[#01F27B]">{authUser?.subscription?.plan?.toUpperCase()} {userRole === "founder" ? "Founder" : "Investor"}</span>
               </div>
               <Avatar className="w-10 h-10 border-2 border-white/10">
-                <AvatarImage src="https://i.pravatar.cc/150?u=alex" />
-                <AvatarFallback>AC</AvatarFallback>
+                <AvatarImage src={authUser?.profile?.profileImage || `https://ui-avatars.com/api/?name=${authUser?.firstName}+${authUser?.lastName}&background=01F27B&color=000`} />
+                <AvatarFallback>{authUser?.firstName?.charAt(0)}{authUser?.lastName?.charAt(0)}</AvatarFallback>
               </Avatar>
             </div>
             <Button

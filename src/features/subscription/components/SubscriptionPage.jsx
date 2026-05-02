@@ -96,12 +96,19 @@ export default function SubscriptionPage() {
 
     try {
       setUpgrading(true);
-      await api.post('/api/v1/subscription/upgrade', { plan: planName.toLowerCase() });
-      toast.success(`Successfully upgraded to ${planName.toUpperCase()} plan!`);
-      await fetchSubscriptionData();
+      // 1. Call the backend to create the MyFatoorah session
+      const response = await api.post('/api/v1/payments/create', { planName: planName.toLowerCase() });
+      
+      // 2. Extract URL and redirect
+      const paymentUrl = response?.data?.paymentUrl || response?.paymentUrl || response?.data?.data?.paymentUrl;
+      
+      if (paymentUrl) {
+        window.location.href = paymentUrl;
+      } else {
+        throw new Error("No payment URL received");
+      }
     } catch (err) {
-      toast.error(err.message || "Failed to upgrade. Please try again.");
-    } finally {
+      toast.error(err.message || "Failed to initialize payment. Please try again.");
       setUpgrading(false);
     }
   };

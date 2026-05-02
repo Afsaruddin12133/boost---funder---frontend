@@ -3,6 +3,10 @@ import { Loader2, Edit3, MapPin } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
+import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
+import { useAuth } from "@/features/auth/hooks/useAuth";
+import { CheckCircle } from "lucide-react";
+import { Badge } from '@/shared/ui/badge';
 
 import ProfileView from './investor/ProfileView';
 import ProfileForm from './investor/ProfileForm';
@@ -12,6 +16,14 @@ export default function InvestorProfilePage() {
   const [profile, setProfile] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditMode, setIsEditMode] = useState(false);
+  
+  const { data: verStatus } = useVerificationStatus();
+  const { user: authUser } = useAuth();
+  
+  console.log("[InvestorProfilePage] authUser:", authUser);
+  console.log("[InvestorProfilePage] verStatus:", verStatus);
+  
+  const isVerified = verStatus?.status === "approved" && authUser?.isVerified !== false;
   
   // For avatar upload
   const [imageFile, setImageFile] = useState(null);
@@ -157,9 +169,16 @@ export default function InvestorProfilePage() {
               )}
             </div>
             
-            <h2 className="text-2xl font-bold text-white mb-1">
-              {profile?.firstName || profile?.lastName ? `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim() : 'Your Name'}
-            </h2>
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <h2 className="text-2xl font-bold text-white">
+                {profile?.firstName || profile?.lastName ? `${profile?.firstName || ''} ${profile?.lastName || ''}`.trim() : 'Your Name'}
+              </h2>
+              {isVerified && (
+                <Badge className="bg-[#01F27B] text-black border-0 rounded-full text-[9px] font-bold px-2 py-0.5 flex items-center gap-1">
+                  <CheckCircle className="w-2.5 h-2.5" /> Verified
+                </Badge>
+              )}
+            </div>
             <p className="text-white/50 mb-4">{profile?.email || 'email@example.com'}</p>
             
             {profile?.location && !isEditMode && (

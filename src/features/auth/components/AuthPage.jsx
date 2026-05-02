@@ -8,7 +8,7 @@ import {
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { ArrowLeft, Loader2, Lock, Mail, Rocket, User } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail, Rocket, User } from "lucide-react";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
@@ -57,6 +57,7 @@ export default function AuthPage({ onBack }) {
   });
 
   const [fieldErrors, setFieldErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   // State for social login role selection
   const [socialLoginState, setSocialLoginState] = useState({
@@ -83,6 +84,7 @@ export default function AuthPage({ onBack }) {
     setIsLogin((prev) => !prev);
     setFieldErrors({});
     clearError();
+    setShowPassword(false);
     setFields({ firstName: "", lastName: "", email: "", password: "", role: "investor" });
   };
 
@@ -292,13 +294,21 @@ export default function AuthPage({ onBack }) {
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                     <Input
                       id="password"
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={fields.password}
                       onChange={set("password")}
                       placeholder="••••••••"
-                      className="pl-10 bg-white/5 border-white/10 focus:border-[#01F27B]/30 focus:ring-[#01F27B]/20"
+                      className="pl-10 pr-10 bg-white/5 border-white/10 focus:border-[#01F27B]/30 focus:ring-[#01F27B]/20"
                       disabled={loading}
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white transition-colors"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
                   </div>
                   <FieldError msg={fieldErrors.password} />
                 </div>

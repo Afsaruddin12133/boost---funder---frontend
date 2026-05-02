@@ -2,6 +2,7 @@ import { DealList, CreateDealForm } from "@/features/deal";
 import DealDetailPage from "@/features/deal/components/DealDetailPage";
 import FounderVerificationPage from "@/features/verification/components/FounderVerificationPage";
 import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import FounderProfilePage from "@/features/profile/components/FounderProfilePage";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -15,7 +16,8 @@ import {
     Rocket,
     ShieldCheck,
     TrendingUp,
-    Upload
+    Upload,
+    User
 } from "lucide-react";
 import {
     Bar,
@@ -36,7 +38,11 @@ const analyticsData = [
   { name: "SUN", views: 190, peak: 200 },
 ];
 
-function OverviewCards() {
+function OverviewCards({ verStatus, user }) {
+  // A user is only truly verified if the service says approved AND they aren't explicitly flagged as unverified (e.g. new social login)
+  const isVerified = verStatus?.status === "approved" && user?.isVerified !== false;
+  const isPending = verStatus?.status === "pending";
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <Card className="bg-[#0c0c0c] border-white/5 p-5 relative overflow-hidden">
@@ -80,24 +86,34 @@ function OverviewCards() {
           <span className="text-xs font-medium text-[#01F27B]">Lvl 2</span>
         </div>
         <p className="text-xs text-white/60 font-medium mb-1">VERIFICATION</p>
-        <h3 className="text-2xl font-semibold text-[#01F27B]">Verified</h3>
+        <h3 className={`text-2xl font-semibold ${isVerified ? "text-[#01F27B]" : isPending ? "text-amber-400" : "text-white/40"}`}>
+          {isVerified ? "Verified" : isPending ? "Pending" : "Unverified"}
+        </h3>
       </Card>
     </div>
   );
 }
 
-function ProfileSection() {
+function ProfileSection({ user }) {
   const { data: verStatus } = useVerificationStatus();
-  const isVerified = verStatus?.status === "approved";
+  const isVerified = verStatus?.status === "approved" && user?.isVerified !== false;
+  
+  const displayName = user?.profile?.companyName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || "My Startup";
+  const category = user?.profile?.startupStage || "Founder";
+  const bio = user?.profile?.bio || user?.profile?.startupDescription || "Complete your profile to build investor trust and unlock more features.";
 
   return (
-    <Card className="bg-[#0c0c0c] border-white/5 p-6 md:p-8 flex flex-col justify-between">
+    <Card className="bg-[#0c0c0c] border-white/5 p-6 md:p-8 flex flex-col justify-between h-full">
       <div className="flex flex-col md:flex-row gap-6 mb-8">
         <div className="relative w-24 h-24 shrink-0">
-          <div className="w-24 h-24 bg-black border border-white/10 rounded-2xl flex items-center justify-center">
-            <div className="text-[#01F27B]">
-              <Rocket className="w-10 h-10" />
-            </div>
+          <div className="w-24 h-24 bg-black border border-white/10 rounded-2xl flex items-center justify-center overflow-hidden">
+            {user?.profile?.profileImage ? (
+              <img src={user.profile.profileImage} alt={displayName} className="w-full h-full object-cover" />
+            ) : (
+              <div className="text-[#01F27B]">
+                <Rocket className="w-10 h-10" />
+              </div>
+            )}
           </div>
           {isVerified && (
             <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-[#01F27B] rounded-full border-2 border-[#0c0c0c] flex items-center justify-center shadow-[0_0_12px_rgba(1,242,123,0.6)]">
@@ -107,17 +123,16 @@ function ProfileSection() {
         </div>
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <h2 className="text-2xl font-semibold">EcoPulse Solutions</h2>
-            <Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20 rounded-full">GreenTech</Badge>
+            <h2 className="text-2xl font-semibold">{displayName}</h2>
+            <Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20 rounded-full">{category}</Badge>
             {isVerified && (
               <Badge className="bg-[#01F27B] text-black border-[#01F27B] rounded-full text-[10px] font-bold flex items-center gap-1">
                 <CheckCircle className="w-3 h-3" /> Verified
               </Badge>
             )}
           </div>
-          <p className="text-white/60 text-sm leading-relaxed max-w-2xl">
-            Pioneering modular carbon capture systems for medium-scale industrial manufacturing plants. 
-            Reducing footprint by 40% with AI-driven optimization.
+          <p className="text-white/60 text-sm leading-relaxed max-w-2xl line-clamp-3">
+            {bio}
           </p>
         </div>
       </div>
@@ -181,24 +196,30 @@ function AnalyticsSection() {
   );
 }
 
-function VerificationSection() {
+function VerificationSection({ verStatus, user }) {
+  const status = user?.isVerified === false ? "unverified" : (verStatus?.status || "unverified");
+  
   return (
     <Card className="bg-[#0c0c0c] border-white/5 p-6">
       <h3 className="font-semibold text-lg mb-6">Verification Status</h3>
       <div className="space-y-3 mb-6">
-        <div className="flex items-center justify-between p-4 rounded-xl bg-[#01F27B]/5 border border-[#01F27B]/10">
+        <div className={`flex items-center justify-between p-4 rounded-xl ${status === 'approved' ? 'bg-[#01F27B]/5 border-[#01F27B]/10' : 'bg-white/5 border-white/5'}`}>
           <div className="flex items-center gap-3">
-            <CheckCircle className="w-5 h-5 text-[#01F27B]" />
-            <span className="text-sm font-medium">ID Upload</span>
+            <CheckCircle className={`w-5 h-5 ${status === 'approved' ? 'text-[#01F27B]' : 'text-white/20'}`} />
+            <span className={`text-sm font-medium ${status === 'approved' ? 'text-white' : 'text-white/40'}`}>Identity Verification</span>
           </div>
-          <span className="text-[10px] font-bold text-[#01F27B]">DONE</span>
+          <span className={`text-[10px] font-bold ${status === 'approved' ? 'text-[#01F27B]' : 'text-white/20'}`}>
+            {status === 'approved' ? 'DONE' : status === 'pending' ? 'IN REVIEW' : 'TODO'}
+          </span>
         </div>
-        <div className="flex items-center justify-between p-4 rounded-xl bg-[#f59e0b]/5 border border-[#f59e0b]/10">
+        <div className={`flex items-center justify-between p-4 rounded-xl ${status === 'pending' ? 'bg-[#f59e0b]/5 border-[#f59e0b]/10' : 'bg-white/5 border-white/5 opacity-50'}`}>
           <div className="flex items-center gap-3">
-            <Clock className="w-5 h-5 text-[#f59e0b]" />
-            <span className="text-sm font-medium text-white/90">Biometric Selfie</span>
+            <Clock className={`w-5 h-5 ${status === 'pending' ? 'text-[#f59e0b]' : 'text-white/20'}`} />
+            <span className="text-sm font-medium text-white/90">Manual Review</span>
           </div>
-          <span className="text-[10px] font-bold text-[#f59e0b]">PENDING</span>
+          <span className={`text-[10px] font-bold ${status === 'pending' ? 'text-[#f59e0b]' : 'text-white/20'}`}>
+            {status === 'pending' ? 'PENDING' : 'WAITING'}
+          </span>
         </div>
         <div className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/5 opacity-50">
           <div className="flex items-center gap-3">
@@ -236,12 +257,15 @@ function SubscriptionSection() {
 }
 
 function MainDashboard({ onNavigate }) {
+  const { data: verStatus } = useVerificationStatus();
+  const { user } = useAuth();
+  
   return (
     <div className="space-y-6">
-      <OverviewCards />
+      <OverviewCards verStatus={verStatus} user={user} />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <ProfileSection />
+          <ProfileSection user={user} />
         </div>
         <div>
           <AnalyticsSection />
@@ -257,7 +281,7 @@ function MainDashboard({ onNavigate }) {
           </div>
         </Card>
         <div className="space-y-6">
-          <VerificationSection />
+          <VerificationSection verStatus={verStatus} user={user} />
           <SubscriptionSection />
         </div>
       </div>

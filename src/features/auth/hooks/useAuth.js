@@ -79,7 +79,13 @@ export function useAuth() {
     try {
       const res = await loginUser({ email, password });
       if (!res?.data?.token) throw new Error(res?.message || "Login failed.");
-      _persist(res.data.token, res.data.user);
+      const userData = {
+        ...res.data.user,
+        isVerified: false
+      };
+
+      console.log("userData", userData);
+      _persist(res.data.token, userData);
       navigate(redirectPathForRole(res.data.user?.role), { replace: true });
     } catch (err) {
       setError(err.message || "Something went wrong. Please try again.");
@@ -117,7 +123,16 @@ export function useAuth() {
       const res = await googleLogin(firebaseToken, selectedRole);
       
       if (!res?.data?.token) throw new Error(res?.message || "Google login failed.");
-      _persist(res.data.token, res.data.user);
+      
+      // Ensure the user is not automatically verified just by social login
+      const userData = {
+        ...res.data.user,
+        isVerified: false
+      };
+
+      console.log(userData);
+
+      _persist(res.data.token, userData);
       navigate(redirectPathForRole(res.data.user?.role ?? selectedRole), { replace: true });
     } catch (err) {
       setError(err.message || "Google login failed. Please try again.");
@@ -136,7 +151,14 @@ export function useAuth() {
       const res = await facebookLogin(firebaseToken, selectedRole);
       
       if (!res?.data?.token) throw new Error(res?.message || "Facebook login failed.");
-      _persist(res.data.token, res.data.user);
+      
+      // Ensure the user is not automatically verified just by social login
+      const userData = {
+        ...res.data.user,
+        isVerified: false
+      };
+      
+      _persist(res.data.token, userData);
       navigate(redirectPathForRole(res.data.user?.role ?? selectedRole), { replace: true });
     } catch (err) {
       setError(err.message || "Facebook login failed. Please try again.");

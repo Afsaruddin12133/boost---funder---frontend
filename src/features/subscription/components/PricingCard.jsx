@@ -1,8 +1,7 @@
-import React from "react";
-import { Check, Rocket, Zap, Crown } from "lucide-react";
-import { Card } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
+import { Card } from "@/shared/ui/card";
+import { Check, Crown, Rocket, Zap } from "lucide-react";
 
 const PLAN_ICONS = {
   free: Rocket,

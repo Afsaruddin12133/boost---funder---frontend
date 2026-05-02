@@ -10,6 +10,7 @@ import { Card } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
 import { getFounderProfile, updateFounderProfile } from "../services/profile.service";
 import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 
 // ─── Flatten { user: { ..., profile: {...}|null } } → flat object ──────────────
 function flattenProfile(user) {
@@ -193,7 +194,8 @@ function PageSkeleton() {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function FounderProfilePage() {
   const { data: verStatus } = useVerificationStatus();
-
+  const { user: authUser } = useAuth();
+  
   // Direct fetch — bypasses React Query data pipeline completely
   const [rawUser, setRawUser] = useState(null);
   const [loading, setLoading]  = useState(true);
@@ -227,7 +229,7 @@ export default function FounderProfilePage() {
 
   // Flatten API data
   const profile   = flattenProfile(rawUser);
-  const isVerified = profile?.isVerified || verStatus?.status === "approved";
+  const isVerified = verStatus?.status === "approved" && authUser?.isVerified !== false;
   const completion = calcCompletion(profile);
 
   // VIEW → read directly from `profile` (live data)
