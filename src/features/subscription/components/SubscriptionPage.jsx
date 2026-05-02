@@ -1,263 +1,204 @@
-import { Check, ArrowLeft, Rocket, LogOut, Sparkles, Zap, Crown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import PricingCard from "./PricingCard";
+import api from "@/lib/api";
+import { Loader2, AlertCircle } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import toast from "react-hot-toast";
+import { useNavigate } from "react-router";
+import { useAuth } from "@/features/auth/hooks/useAuth";
 import { Card } from "@/shared/ui/card";
-import { Badge } from "@/shared/ui/badge";
-export default function SubscriptionPage({ onNavigate, userRole, onLogout }) {
-  const investorPlans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "forever",
-      icon: Rocket,
-      description: "Get started with basic access",
-      features: [
-        "Browse all deals",
-        "Save up to 5 deals",
-        "Basic filters",
-        "Email notifications"
-      ],
-      limitations: [
-        "No direct founder access",
-        "Limited deal details"
-      ]
-    },
-    {
-      name: "Pro",
-      price: "$99",
-      period: "per month",
-      icon: Zap,
-      description: "For active investors",
-      features: [
-        "Everything in Free",
-        "Unlimited saved deals",
-        "Request access to founders",
-        "Full deal details",
-        "Advanced filters",
-        "Priority support",
-        "Analytics dashboard"
-      ],
-      popular: true
-    },
-    {
-      name: "Elite",
-      price: "$299",
-      period: "per month",
-      icon: Crown,
-      description: "For power investors",
-      features: [
-        "Everything in Pro",
-        "Unlimited deal unlocks",
-        "Direct founder messages",
-        "Early access to deals",
-        "Investment pipeline tracking",
-        "Dedicated account manager",
-        "Quarterly market reports"
-      ]
-    }
-  ];
-  const founderPlans = [
-    {
-      name: "Free",
-      price: "$0",
-      period: "forever",
-      icon: Rocket,
-      description: "List your startup",
-      features: [
-        "Create startup profile",
-        "Basic visibility",
-        "Receive investor requests",
-        "Up to 3 team members"
-      ]
-    },
-    {
-      name: "Boost",
-      price: "$149",
-      period: "per month",
-      icon: Zap,
-      description: "Increase visibility",
-      features: [
-        "Everything in Free",
-        "Featured in search results",
-        "Advanced analytics",
-        "Unlimited team members",
-        "Investor insights",
-        "Priority verification"
-      ],
-      popular: true
-    },
-    {
-      name: "Scale",
-      price: "$299",
-      period: "per month",
-      icon: Sparkles,
-      description: "Maximum exposure",
-      features: [
-        "Everything in Boost",
-        "Homepage featured spot",
-        "Dedicated support",
-        "Custom deal room",
-        "Investor targeting",
-        "Campaign management"
-      ]
-    },
-    {
-      name: "Raise Pro",
-      price: "$499",
-      period: "per month",
-      icon: Crown,
-      description: "Active fundraising",
-      features: [
-        "Everything in Scale",
-        "Dedicated success manager",
-        "Investor introductions",
-        "Pitch deck review",
-        "Data room hosting",
-        "Deal closing support"
-      ]
-    }
-  ];
-  const plans = userRole === "investor" ? investorPlans : founderPlans;
-  return <div className="min-h-screen bg-black relative overflow-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#01F27B]/5 via-transparent to-transparent pointer-events-none" />
-      <div className="relative z-10">
-      {
-    /* Navigation */
+
+const FALLBACK_PLANS = [
+  {
+    name: "free",
+    price: 0,
+    duration: "forever",
+    features: [
+      "Browse all deals",
+      "Save up to 5 deals",
+      "Basic filters"
+    ],
+  },
+  {
+    name: "pro",
+    price: 99,
+    duration: "monthly",
+    features: [
+      "Everything in Free",
+      "Unlimited saved deals",
+      "Request access to founders",
+      "Full deal details",
+      "Priority support"
+    ],
+  },
+  {
+    name: "elite",
+    price: 299,
+    duration: "monthly",
+    features: [
+      "Everything in Pro",
+      "Direct founder messages",
+      "Early access to deals",
+      "Dedicated account manager"
+    ],
   }
-      <nav className="sticky top-0 z-50 bg-black/80 backdrop-blur-xl border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <Button
-    variant="ghost"
-    size="icon"
-    onClick={() => onNavigate("deal-feed")}
-  >
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-[#01F27B] rounded-lg flex items-center justify-center">
-                <Rocket className="w-5 h-5 text-black" />
-              </div>
-              <span className="text-xl font-semibold">BoostFundr</span>
+];
+
+export default function SubscriptionPage() {
+  const [plans, setPlans] = useState([]);
+  const [userSub, setUserSub] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [upgrading, setUpgrading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
+  const isGuest = !isAuthenticated;
+
+  const fetchSubscriptionData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const plansRes = await api.get('/api/v1/subscription').catch(() => null);
+      let fetchedPlans = Array.isArray(plansRes) ? plansRes : (plansRes?.data?.plans || plansRes?.data?.items || plansRes?.data || plansRes?.plans);
+      
+      if (!Array.isArray(fetchedPlans) || fetchedPlans.length === 0) {
+        fetchedPlans = FALLBACK_PLANS;
+      }
+      setPlans(fetchedPlans);
+      
+      if (!isGuest) {
+        try {
+          const mySubRes = await api.get('/api/v1/subscription/me');
+          setUserSub(mySubRes?.data || mySubRes);
+        } catch (e) {
+          console.error("No active subscription or failed to fetch", e);
+        }
+      }
+    } catch (err) {
+      setError(err.message || "Failed to load subscription data.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSubscriptionData();
+    // eslint-disable-next-line
+  }, [isGuest]);
+
+  const handleUpgrade = async (planName) => {
+    if (isGuest) {
+      navigate('/login');
+      return;
+    }
+
+    try {
+      setUpgrading(true);
+      await api.post('/api/v1/subscription/upgrade', { plan: planName.toLowerCase() });
+      toast.success(`Successfully upgraded to ${planName.toUpperCase()} plan!`);
+      await fetchSubscriptionData();
+    } catch (err) {
+      toast.error(err.message || "Failed to upgrade. Please try again.");
+    } finally {
+      setUpgrading(false);
+    }
+  };
+
+  const getPlanName = (sub) => {
+    if (!sub) return 'free';
+    if (typeof sub === 'string') return sub;
+    const p = sub.activePlan || sub.plan || sub.name;
+    if (typeof p === 'string') return p;
+    if (p?.name) return p.name;
+    return 'free';
+  };
+
+  const currentPlan = !isGuest ? getPlanName(userSub) : 'free';
+  const expiresAt = userSub?.expiresAt || userSub?.endDate;
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-8 h-8 text-[#01F27B] animate-spin mb-4" />
+        <p className="text-white/60">Loading pricing plans...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full flex flex-col items-center justify-center min-h-[50vh] text-center">
+        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
+        <h3 className="text-xl font-bold text-white mb-2">Failed to load plans</h3>
+        <p className="text-white/60 mb-6">{error}</p>
+        <Button onClick={fetchSubscriptionData} className="bg-[#01F27B] text-black hover:bg-[#01F27B]/90 font-semibold">
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto space-y-12 pb-12 relative z-10">
+      {/* Header & User Info section */}
+      <div className="text-center space-y-4">
+        <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+          Choose your <span className="text-[#01F27B]">Plan</span>
+        </h1>
+        <p className="text-white/60 text-lg max-w-2xl mx-auto">
+          Unlock exclusive deal flow and connect directly with top tier founders.
+        </p>
+      </div>
+
+      {!isGuest && (
+        <Card className="bg-[#0c0c0c] border-white/10 p-6 flex flex-col sm:flex-row items-center justify-between max-w-2xl mx-auto">
+          <div className="mb-4 sm:mb-0 text-center sm:text-left">
+            <p className="text-sm text-white/50 mb-1">Current Status</p>
+            <div className="flex items-center gap-3 justify-center sm:justify-start">
+              <span className="text-xl font-bold capitalize text-white">{currentPlan} Plan</span>
+              {currentPlan.toLowerCase() !== 'free' && (
+                <span className="px-2 py-0.5 rounded-full bg-[#01F27B]/10 text-[#01F27B] text-xs font-bold border border-[#01F27B]/20">
+                  Active
+                </span>
+              )}
             </div>
           </div>
-          <Button variant="ghost" onClick={onLogout}>
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
-        </div>
-      </nav>
-
-      <div className="max-w-7xl mx-auto px-6 py-12">
-        {
-    /* Header */
-  }
-        <div className="text-center mb-12">
-          <Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20 mb-4">
-            {userRole === "investor" ? "Investor" : "Founder"} Plans
-          </Badge>
-          <h1 className="text-5xl font-bold mb-4">
-            Choose Your <span className="text-[#01F27B]">Plan</span>
-          </h1>
-          <p className="text-xl text-white/70 max-w-2xl mx-auto">
-            {userRole === "investor" ? "Get access to exclusive deals and connect with verified founders" : "Showcase your startup and connect with serious investors"}
-          </p>
-        </div>
-
-        {
-    /* Pricing Cards */
-  }
-        <div className={`grid ${plans.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3"} gap-6 mb-12`}>
-          {plans.map((plan, idx) => <Card
-    key={idx}
-    className={`border p-8 transition-all hover:scale-[1.02] relative overflow-hidden ${plan.popular ? "border-[#01F27B] bg-gradient-to-b from-[#01F27B]/15 via-[#0c0c0c] to-[#06120b] shadow-[0_0_40px_rgba(1,242,123,0.2)]" : "bg-gradient-to-b from-[#0c0c0c] to-[#06120b] border-white/10 hover:border-[#01F27B]/30 hover:shadow-[0_0_30px_rgba(1,242,123,0.1)]"}`}
-  >
-              {plan.popular && <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-[#01F27B] to-transparent" />}
-              <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[#01F27B]/10 to-transparent rounded-full blur-2xl" />
-              <div className="relative z-10">
-              {plan.popular && <div className="absolute -top-11 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-[#01F27B] text-black border-[#01F27B]">
-                    Most Popular
-                  </Badge>
-                </div>}
-
-              <div className="mb-6">
-                <div className="w-12 h-12 bg-[#01F27B]/10 rounded-xl flex items-center justify-center mb-4">
-                  <plan.icon className="w-6 h-6 text-[#01F27B]" />
-                </div>
-                <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                <p className="text-white/60 text-sm mb-4">{plan.description}</p>
-                <div className="mb-2">
-                  <span className="text-4xl font-bold">{plan.price}</span>
-                  <span className="text-white/60 ml-2">/{plan.period}</span>
-                </div>
-              </div>
-
-              <Button
-    className={`w-full mb-6 ${plan.popular ? "bg-[#01F27B] hover:bg-[#01F27B]/90 text-black" : "border-white/20 hover:bg-white/5"}`}
-    variant={plan.popular ? "default" : "outline"}
-  >
-                {plan.name === "Free" ? "Current Plan" : "Upgrade"}
-              </Button>
-
-              <div className="space-y-3">
-                {plan.features.map((feature, fidx) => <div key={fidx} className="flex items-start gap-3">
-                    <Check className="w-5 h-5 text-[#01F27B] flex-shrink-0 mt-0.5" />
-                    <span className="text-sm text-white/80">{feature}</span>
-                  </div>)}
-                {plan.limitations?.map((limitation, lidx) => <div key={lidx} className="flex items-start gap-3 opacity-50">
-                    <span className="text-white/40 text-sm">✗</span>
-                    <span className="text-sm text-white/60 line-through">{limitation}</span>
-                  </div>)}
-              </div>
-              </div>
-            </Card>)}
-        </div>
-
-        {
-    /* Features Comparison */
-  }
-        <Card className="bg-[#0c0c0c] border-white/10 p-8">
-          <h2 className="text-2xl font-bold mb-6 text-center">All Plans Include</h2>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-[#01F27B]/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Check className="w-6 h-6 text-[#01F27B]" />
-              </div>
-              <h3 className="font-semibold mb-2">Verified Users</h3>
-              <p className="text-sm text-white/60">All profiles are verified and vetted</p>
-            </div>
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-[#01F27B]/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Check className="w-6 h-6 text-[#01F27B]" />
-              </div>
-              <h3 className="font-semibold mb-2">Secure Platform</h3>
-              <p className="text-sm text-white/60">Enterprise-grade security and privacy</p>
-            </div>
-            <div className="text-center p-4">
-              <div className="w-12 h-12 bg-[#01F27B]/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                <Check className="w-6 h-6 text-[#01F27B]" />
-              </div>
-              <h3 className="font-semibold mb-2">24/7 Support</h3>
-              <p className="text-sm text-white/60">Get help whenever you need it</p>
-            </div>
+          <div className="text-center sm:text-right">
+            {currentPlan.toLowerCase() === 'free' ? (
+              <span className="text-sm text-white/50">No active premium subscription</span>
+            ) : (
+              <>
+                <p className="text-sm text-white/50 mb-1">Renews on</p>
+                <p className="font-medium text-white">
+                  {expiresAt ? new Date(expiresAt).toLocaleDateString() : 'Auto-renewing'}
+                </p>
+              </>
+            )}
           </div>
         </Card>
+      )}
 
-        {
-    /* CTA */
-  }
-        <div className="text-center mt-12">
-          <p className="text-white/60 mb-6">
-            Not sure which plan is right for you?
-          </p>
-          <Button
-    variant="outline"
-    className="border-white/20 hover:bg-white/5"
-  >
-            Contact Sales
-          </Button>
-        </div>
+      {/* Pricing Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
+        {/* Loading overlay for upgrade action */}
+        {upgrading && (
+          <div className="absolute inset-0 z-50 bg-[#0c0c0c]/50 backdrop-blur-sm rounded-3xl flex items-center justify-center">
+            <Loader2 className="w-10 h-10 text-[#01F27B] animate-spin" />
+          </div>
+        )}
+
+        {plans.map((plan, idx) => (
+          <PricingCard
+            key={idx}
+            plan={plan}
+            currentPlan={currentPlan}
+            isGuest={isGuest}
+            onUpgrade={handleUpgrade}
+          />
+        ))}
       </div>
-      </div>
-    </div>;
+    </div>
+  );
 }

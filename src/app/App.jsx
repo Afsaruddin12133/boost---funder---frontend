@@ -1,10 +1,14 @@
-import { Navigate, Routes, Route, useParams, useNavigate } from "react-router";
-import { LandingPage } from "@/features/landing";
 import { AuthPage } from "@/features/auth";
-import { DealFeed, DealDetailPage } from "@/features/deal";
-import { InvestorDashboard, FounderDashboard } from "@/features/dashboard";
-import { SubscriptionPage } from "@/features/subscription";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { FounderDashboard, InvestorDashboard } from "@/features/dashboard";
+import { DealDetailPage, DealFeed, ExploreDealsList } from "@/features/deal";
+import { LandingPage } from "@/features/landing";
+import { SubscriptionPage } from "@/features/subscription";
+import InvestorVerificationPage from "@/features/verification/components/InvestorVerificationPage";
+import InvestorProfilePage from "@/features/profile/components/InvestorProfilePage";
+import PaymentSuccessPage from "@/features/payment/components/PaymentSuccessPage";
+import PaymentCancelPage from "@/features/payment/components/PaymentCancelPage";
+import { Navigate, Route, Routes, useNavigate, useParams } from "react-router";
 import DashboardLayout from "./layout/DashboardLayout";
 
 // ─── Protected route wrapper ──────────────────────────────────────────────────
@@ -25,7 +29,7 @@ function DealDetailWrapper({ onNavigate }) {
 
   return (
     <DealDetailPage
-      dealId={parseInt(id, 10)}
+      dealId={id}
       userRole={role}
       onLogout={logout}
       onNavigate={onNavigate}
@@ -81,12 +85,23 @@ export default function App() {
           <Route path="/deals" element={<DealFeed {...sharedProps} />} />
           <Route path="/deals/:id" element={<DealDetailWrapper onNavigate={navigate} />} />
           <Route path="/subscription" element={<SubscriptionPage {...sharedProps} />} />
+          <Route path="/payment/success" element={<PaymentSuccessPage />} />
+          <Route path="/payment/cancel" element={<PaymentCancelPage />} />
 
           {/* Protected routes */}
           <Route path="/dashboard/*" element={
             <ProtectedRoute>
               <DashboardLayout userRole="investor" onNavigate={navigate} onLogout={logout}>
-                <InvestorDashboard {...sharedProps} />
+                <Routes>
+                  <Route path="/" element={<InvestorDashboard {...sharedProps} />} />
+                  <Route path="investor" element={<InvestorDashboard {...sharedProps} />} />
+                  <Route path="investor/deals" element={<ExploreDealsList {...sharedProps} />} />
+                  <Route path="investor/deals/:id" element={<DealDetailWrapper onNavigate={navigate} />} />
+                  <Route path="investor/verification" element={<InvestorVerificationPage />} />
+                  <Route path="investor/profile" element={<InvestorProfilePage />} />
+                  <Route path="investor/subscription" element={<SubscriptionPage {...sharedProps} />} />
+                  <Route path="*" element={<Navigate to="/dashboard/investor" replace />} />
+                </Routes>
               </DashboardLayout>
             </ProtectedRoute>
           } />

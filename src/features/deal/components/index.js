@@ -4,4 +4,4 @@ export { default as DealDetailPage } from './DealDetailPage';
 export { default as DealFeed } from './DealFeed';
 export { default as DealList } from './DealList.jsx';
 export { default as DealTable } from './DealTable.jsx';
-
+export { default as ExploreDealsList } from './ExploreDealsList.jsx';

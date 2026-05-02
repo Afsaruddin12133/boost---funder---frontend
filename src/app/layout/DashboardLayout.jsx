@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router";
 import {
   LayoutDashboard, Building, Briefcase, LineChart,
   ShieldCheck, CreditCard, Settings, Compass,
-  Bookmark, PieChart, MessageSquare, Search, Bell, Plus, LogOut
+  Bookmark, PieChart, Search, Bell, Plus, LogOut
 } from "lucide-react";
 
 import {
@@ -30,12 +30,13 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
   ];
 
   const investorNav = [
-    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
-    { name: "Explore Deals", icon: Compass, path: "/deals" },
-    { name: "Saved Deals", icon: Bookmark, path: "/dashboard/saved" },
-    { name: "Investments", icon: PieChart, path: "/dashboard/investments" },
-    { name: "Messages", icon: MessageSquare, path: "/dashboard/messages" },
-    { name: "Settings", icon: Settings, path: "/dashboard/settings" },
+    { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/investor" },
+    { name: "Explore Deals", icon: Compass, path: "/dashboard/investor/deals" },
+    { name: "Saved Deals", icon: Bookmark, path: "/dashboard/investor/saved" },
+    { name: "Verification", icon: ShieldCheck, path: "/dashboard/investor/verification" },
+    { name: "Subscription", icon: CreditCard, path: "/dashboard/investor/subscription" },
+    { name: "My Profile", icon: Building, path: "/dashboard/investor/profile" },
+    { name: "Settings", icon: Settings, path: "/dashboard/investor/settings" },
   ];
 
   const navItems = userRole === "founder" ? founderNav : investorNav;

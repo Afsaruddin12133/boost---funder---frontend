@@ -80,3 +80,19 @@ export const getStatusMeta = (status) => {
       return { label: raw, className: "bg-white/10 text-white/60 border-white/10" };
   }
 };
+
+export const calculateDaysLeft = (deadline) => {
+  if (!deadline) return null;
+  const deadlineDate = new Date(deadline);
+  if (Number.isNaN(deadlineDate.getTime())) return null;
+  
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(deadlineDate);
+  target.setHours(0, 0, 0, 0);
+  
+  const diffTime = target - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays > 0 ? diffDays : 0;
+};
