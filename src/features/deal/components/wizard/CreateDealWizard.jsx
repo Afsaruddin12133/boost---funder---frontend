@@ -23,10 +23,10 @@ const STEPS = [
 ];
 
 const INITIAL_DATA = {
-  startupName: "", startupLogo: null, startupWebsite: "", tagline: "", category: "", stage: "", location: "",
+  startupName: "", startupLogo: null, startupWebsite: "", whatsappNumber: "", tagline: "", category: "", stage: "", location: "",
   problem: "", solution: "", vision: "", targetMarket: "", whyNow: "",
-  goalAmount: "", raisedAmount: "", minimumInvestment: "", deadline: "", users: "", growthRate: "",
-  revenue: "", businessModel: "", goToMarket: "", topCompetitor: "", advantage: "", team: [], useOfFunds: [],
+  goalAmount: "", raisedAmount: "", minimumInvestment: "", deadline: "", users: "", growthRate: "", CAC: "", LTV: "", CHURN: "",
+  revenue: "", businessModel: "", goToMarket: "", topCompetitor: "", advantage: "", team: [], useOfFunds: [], qa: [],
   pitchDeck: null, safeAgreement: null, termSheet: null, registrationCertificate: null, 
   tradeLicense: null, balanceSheet: null, revenueProof: null, capTable: null, shareholderAgreement: null
 };
@@ -42,9 +42,27 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
     return 1; // If 100%, start from beginning for review or just Step 1
   };
 
+  // Helper to flatten nested API data for the form
+  const getInitialData = (raw) => {
+    const flat = { ...INITIAL_DATA, ...raw };
+    if (raw?.basicInfo) Object.assign(flat, raw.basicInfo);
+    if (raw?.story) Object.assign(flat, raw.story);
+    if (raw?.funding) Object.assign(flat, raw.funding);
+    if (raw?.execution) {
+      Object.assign(flat, raw.execution);
+    }
+    
+    // Format deadline for HTML5 date input (yyyy-MM-dd)
+    if (flat.deadline && flat.deadline.includes("T")) {
+      flat.deadline = flat.deadline.split("T")[0];
+    }
+    
+    return flat;
+  };
+
   const [currentStep, setCurrentStep] = useState(getInitialStep(initialData?.profileCompletionScore || 0));
   const [dealId, setDealId] = useState(initialData?._id || initialData?.id || null);
-  const [data, setData] = useState({ ...INITIAL_DATA, ...initialData });
+  const [data, setData] = useState(getInitialData(initialData));
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
   const [profileScore, setProfileScore] = useState(initialData?.profileCompletionScore || 0);
@@ -59,7 +77,22 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
     if (step === 1) {
       if (!data.startupName?.trim()) e.startupName = "Required";
       if (!data.startupLogo) e.startupLogo = "Required";
-      if (!data.startupWebsite?.trim()) e.startupWebsite = "Required";
+      if (!data.startupWebsite?.trim()) {
+        e.startupWebsite = "Required";
+      } else {
+        const urlPattern = /^(https?:\/\/)?([\da-z.-]+)\.([a-z.]{2,6})([\/\w .-]*)*\/?$/;
+        if (!urlPattern.test(data.startupWebsite)) {
+          e.startupWebsite = "Please enter a valid URL (e.g., https://google.com)";
+        }
+      }
+      if (!data.whatsappNumber?.trim()) {
+        e.whatsappNumber = "Required";
+      } else {
+        const phonePattern = /^\+?[\d\s-]{8,20}$/;
+        if (!phonePattern.test(data.whatsappNumber)) {
+          e.whatsappNumber = "Please use + and country code (e.g., +971 50 123 4567)";
+        }
+      }
       if (!data.category) e.category = "Required";
       if (!data.stage) e.stage = "Required";
       if (!data.location?.trim()) e.location = "Required";
@@ -71,12 +104,27 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
       if (!data.whyNow?.trim()) e.whyNow = "Required";
     }
     if (step === 3) {
-      if (!data.goalAmount) e.goalAmount = "Required";
-      if (!data.raisedAmount) e.raisedAmount = "Required";
-      if (!data.minimumInvestment) e.minimumInvestment = "Required";
+      if (data.goalAmount === undefined || data.goalAmount === null || data.goalAmount === "") e.goalAmount = "Required";
+      if (data.raisedAmount === undefined || data.raisedAmount === null || data.raisedAmount === "") e.raisedAmount = "Required";
+      if (data.minimumInvestment === undefined || data.minimumInvestment === null || data.minimumInvestment === "") e.minimumInvestment = "Required";
+      
+      const goal = Number(String(data.goalAmount || "0").replace(/[^\d.-]/g, ""));
+      const raised = Number(String(data.raisedAmount || "0").replace(/[^\d.-]/g, ""));
+      const minInv = Number(String(data.minimumInvestment || "0").replace(/[^\d.-]/g, ""));
+
+      if (!e.goalAmount && !e.raisedAmount && goal <= raised) {
+        e.goalAmount = "Goal must be greater than raised amount";
+      }
+      if (!e.minimumInvestment && !e.goalAmount && minInv >= goal) {
+        e.minimumInvestment = "Must be less than goal amount";
+      }
+
       if (!data.deadline?.trim()) e.deadline = "Required";
-      if (!data.users) e.users = "Required";
-      if (!data.growthRate) e.growthRate = "Required";
+      if (data.users === undefined || data.users === null || data.users === "") e.users = "Required";
+      if (data.growthRate === undefined || data.growthRate === null || data.growthRate === "") e.growthRate = "Required";
+      if (!data.CAC) e.CAC = "Required";
+      if (!data.LTV) e.LTV = "Required";
+      if (!data.CHURN) e.CHURN = "Required";
     }
     if (step === 4) {
       if (!data.revenue) e.revenue = "Required";
@@ -86,9 +134,10 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
       if (!data.advantage?.trim()) e.advantage = "Required";
       if (!data.team?.length) e.team = "Required";
       if (!data.useOfFunds?.length) e.useOfFunds = "Required";
+      if (!data.qa?.length) e.qa = "Required";
     }
     if (step === 5) {
-      const docs = ["pitchDeck", "safeAgreement", "registrationCertificate", "tradeLicense", "balanceSheet", "revenueProof", "capTable", "shareholderAgreement"];
+      const docs = ["pitchDeck", "safeAgreement", "termSheet", "registrationCertificate", "tradeLicense", "balanceSheet", "revenueProof", "capTable", "shareholderAgreement"];
       docs.forEach(doc => {
         if (!data[doc]) e[doc] = "Required";
       });
@@ -100,8 +149,8 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
   const getStepPayload = (step) => {
     if (step === 1) {
       const fd = new FormData();
-      ["startupName", "startupWebsite", "tagline", "category", "stage", "location"].forEach(k => {
-        if (data[k]) fd.append(k, data[k]);
+      ["startupName", "startupWebsite", "whatsappNumber", "tagline", "category", "stage", "location"].forEach(k => {
+        if (data[k] !== undefined && data[k] !== null && data[k] !== "") fd.append(k, data[k]);
       });
       if (data.startupLogo instanceof File) fd.append("startupLogo", data.startupLogo);
       return { isFormData: true, payload: fd };
@@ -110,35 +159,57 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
     if (step === 2) {
       const payload = {};
       ["problem", "solution", "vision", "targetMarket", "whyNow"].forEach(k => {
-        if (data[k]) payload[k] = data[k];
+        if (data[k] !== undefined && data[k] !== null && data[k] !== "") payload[k] = data[k];
       });
       return { isFormData: false, payload };
     }
 
     if (step === 3) {
       const payload = {};
-      ["goalAmount", "raisedAmount", "minimumInvestment", "deadline", "users", "growthRate"].forEach(k => {
-        if (data[k]) payload[k] = data[k];
+      ["goalAmount", "raisedAmount", "minimumInvestment", "users", "growthRate", "CAC", "LTV"].forEach(k => {
+        if (data[k] !== undefined && data[k] !== null && data[k] !== "") {
+          const cleanVal = String(data[k]).replace(/[^\d.-]/g, "");
+          payload[k] = Number(cleanVal);
+        }
       });
+      if (data.deadline) payload.deadline = data.deadline;
+      if (data.CHURN) payload.CHURN = String(data.CHURN);
       return { isFormData: false, payload };
     }
 
     if (step === 4) {
       const payload = {};
-      ["revenue", "businessModel", "goToMarket", "topCompetitor", "advantage"].forEach(k => {
-        if (data[k]) payload[k] = data[k];
+      ["revenue"].forEach(k => {
+        if (data[k] !== undefined && data[k] !== null && data[k] !== "") {
+          const cleanVal = String(data[k]).replace(/[^\d.-]/g, "");
+          payload[k] = Number(cleanVal);
+        }
       });
-      // Handle arrays
+      ["businessModel", "goToMarket", "topCompetitor", "advantage"].forEach(k => {
+        if (data[k] !== undefined && data[k] !== null && data[k] !== "") payload[k] = data[k];
+      });
       if (data.team?.length) payload.team = data.team;
-      if (data.useOfFunds?.length) payload.useOfFunds = data.useOfFunds;
+      if (data.useOfFunds?.length) {
+        payload.useOfFunds = data.useOfFunds.map(item => ({
+          ...item,
+          percentage: Number(String(item.percentage).replace(/[^\d.-]/g, "")) || 0
+        }));
+      }
+      if (data.qa?.length) payload.qa = data.qa;
       return { isFormData: false, payload };
     }
 
     if (step === 5) {
       const fd = new FormData();
-      const docKeys = ["pitchDeck", "safeAgreement", "registrationCertificate", "tradeLicense", "balanceSheet", "revenueProof", "capTable", "shareholderAgreement"];
+      const docKeys = ["pitchDeck", "safeAgreement", "termSheet", "registrationCertificate", "tradeLicense", "balanceSheet", "revenueProof", "capTable", "shareholderAgreement"];
       docKeys.forEach(k => {
-        if (data[k] instanceof File) fd.append(k, data[k]);
+        const val = data[k];
+        if (val instanceof File) {
+          fd.append(k, val);
+        } else if (typeof val === 'string' && val.startsWith('http')) {
+          // Send existing URL so backend knows it's still there
+          fd.append(k, val);
+        }
       });
       return { isFormData: true, payload: fd };
     }
@@ -176,8 +247,9 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
         response = await patchDeal(dealId, payload);
       }
 
-      // Calculate progress purely on the frontend (20% per step)
-      setProfileScore(currentStep * 20);
+      // Sync progress from API response (prioritize backend calculation)
+      const newScore = response?.profileCompletionScore || (currentStep * 20);
+      setProfileScore(newScore);
 
       toast.success("Successfully saved! ✨");
       return true;

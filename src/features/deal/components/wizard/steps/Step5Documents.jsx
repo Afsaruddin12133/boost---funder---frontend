@@ -6,11 +6,12 @@ import { Lock, ShieldCheck } from 'lucide-react';
 export default function Step5Documents({ data, onChange, errors }) {
   const docTypes = [
     { key: "pitchDeck", label: "Pitch Deck", desc: "Your main presentation" },
-    { key: "safeAgreement", label: "SAFE Agreement / Term Sheet", desc: "Investment terms" },
+    { key: "safeAgreement", label: "SAFE Agreement", desc: "Investment structure" },
+    { key: "termSheet", label: "Term Sheet", desc: "Detailed investment terms" },
     { key: "registrationCertificate", label: "Registration Certificate", desc: "Proof of incorporation" },
     { key: "tradeLicense", label: "Trade License", desc: "If applicable" },
     { key: "balanceSheet", label: "Balance Sheet", desc: "Latest financial statement" },
-    { key: "revenueProof", label: "Revenue Proof", desc: "Bank statements or Stripe screenshots" },
+    { key: "revenueProof", label: "Revenue Proof", desc: "Bank statements or screenshots" },
     { key: "capTable", label: "Cap Table", desc: "Current ownership structure" },
     { key: "shareholderAgreement", label: "Shareholder Agreement", desc: "Legal structural doc" }
   ];

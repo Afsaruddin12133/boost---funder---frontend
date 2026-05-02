@@ -1,5 +1,5 @@
 import { Input } from "@/shared/ui/input";
-import { Briefcase, Globe, Layers, MapPin, Rocket, Tag } from 'lucide-react';
+import { Briefcase, Globe, Layers, MapPin, Phone, Rocket, Tag } from 'lucide-react';
 import Field from '../ui/Field';
 import FileUploader from '../ui/FileUploader';
 import {
@@ -86,24 +86,35 @@ export default function Step1Basic({ data, onChange, errors }) {
           />
         </Field>
 
-        <Field label="Location" icon={MapPin} error={errors.location} required>
+        <Field label="Founder WhatsApp Number" icon={Phone} error={errors.whatsappNumber} required>
           <Input
-            placeholder="e.g. San Francisco, USA"
-            value={data.location || ""}
-            onChange={(e) => onChange("location", e.target.value)}
+            placeholder="+971 5X XXX XXXX (Country Code Required)"
+            value={data.whatsappNumber || ""}
+            onChange={(e) => onChange("whatsappNumber", e.target.value)}
             className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
           />
         </Field>
       </div>
 
-      <Field label="Tagline" icon={Tag} error={errors.tagline}>
-        <Input
-          placeholder="Describe your mission in one powerful sentence"
-          value={data.tagline || ""}
-          onChange={(e) => onChange("tagline", e.target.value)}
-          className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
-        />
-      </Field>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <Field label="Location" icon={MapPin} error={errors.location} required>
+          <Input
+            placeholder="e.g. Abu Dhabi, UAE"
+            value={data.location || ""}
+            onChange={(e) => onChange("location", e.target.value)}
+            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
+          />
+        </Field>
+
+        <Field label="Tagline" icon={Tag} error={errors.tagline}>
+          <Input
+            placeholder="Describe your mission in one powerful sentence"
+            value={data.tagline || ""}
+            onChange={(e) => onChange("tagline", e.target.value)}
+            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
+          />
+        </Field>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-4 border-t border-white/5">
         <div className="space-y-4">

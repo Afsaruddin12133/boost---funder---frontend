@@ -13,14 +13,28 @@ import { Card } from "@/shared/ui/card";
 import { useState } from "react";
 import { Plus, Rocket, FilePlus, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
-import { useDeleteDeal, useMyDeals } from "../hooks";
+import { useDeleteDeal, useMyDeals, useSubmitDeal } from "../hooks";
 import DealCard from "./DealCard";
 import DealTable from "./DealTable";
 
 export default function DealList({ onNavigate, onEdit, onView, onCreate, compact = false }) {
   const { data: deals = [], isLoading, isError, error, refetch } = useMyDeals();
   const deleteDeal = useDeleteDeal();
+  const submitDeal = useSubmitDeal();
   const [deleteTarget, setDeleteTarget] = useState(null);
+
+  const handleSubmitForReview = (deal) => {
+    const dealId = deal.id ?? deal._id;
+    submitDeal.mutate(dealId, {
+      onSuccess: () => {
+        toast.success("Deal submitted for review");
+      },
+      onError: (err) => {
+        toast.error(err?.message || "Failed to submit deal");
+      }
+    });
+  };
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
@@ -128,6 +142,7 @@ export default function DealList({ onNavigate, onEdit, onView, onCreate, compact
               onRequestDelete={setDeleteTarget}
               onEdit={onEdit}
               onView={onView}
+              onSubmitForReview={handleSubmitForReview}
               hideActions={compact}
             />
           </div>

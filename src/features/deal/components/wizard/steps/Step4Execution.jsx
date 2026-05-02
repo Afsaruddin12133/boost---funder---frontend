@@ -24,7 +24,7 @@ export default function Step4Execution({ data, onChange, errors }) {
       </div>
 
       <div className="space-y-5">
-        <Field label="Current ARR / Revenue" icon={Zap} error={errors.revenue} required>
+        <Field label="Current ARR / Revenue (AED)" icon={Zap} error={errors.revenue} required>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
             <Input
@@ -84,6 +84,8 @@ export default function Step4Execution({ data, onChange, errors }) {
               type="double"
               placeholder1="Member Name"
               placeholder2="Role / Title"
+              key1="name"
+              key2="role"
               items={data.team || []}
               onChange={(val) => onChange("team", val)}
             />
@@ -96,8 +98,26 @@ export default function Step4Execution({ data, onChange, errors }) {
               type="double"
               placeholder1="Category (e.g. Marketing)"
               placeholder2="Percentage (%)"
+              key1="category"
+              key2="percentage"
+              inputType2="number"
               items={data.useOfFunds || []}
               onChange={(val) => onChange("useOfFunds", val)}
+            />
+          </Field>
+        </div>
+
+        <div className="pt-4 border-t border-white/5">
+          <Field label="Founder Q&A" icon={Users} error={errors.qa} required>
+            <p className="text-[10px] text-white/30 uppercase tracking-widest mb-3">Anticipate investor questions</p>
+            <DynamicListInput
+              type="double"
+              placeholder1="The Question"
+              placeholder2="Your Answer"
+              key1="question"
+              key2="answer"
+              items={data.qa || []}
+              onChange={(val) => onChange("qa", val)}
             />
           </Field>
         </div>

@@ -1,7 +1,7 @@
 import React from 'react';
 import Field from '../ui/Field';
 import { Input } from "@/shared/ui/input";
-import { DollarSign, TrendingUp, Calendar, Users, BarChart3 } from 'lucide-react';
+import { DollarSign, TrendingUp, Calendar, Users, BarChart3, Target } from 'lucide-react';
 
 export default function Step3Funding({ data, onChange, errors }) {
   return (
@@ -23,7 +23,7 @@ export default function Step3Funding({ data, onChange, errors }) {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        <Field label="Goal Amount" icon={DollarSign} error={errors.goalAmount} required>
+        <Field label="Goal Amount (AED)" icon={DollarSign} error={errors.goalAmount} required>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
             <Input
@@ -36,7 +36,7 @@ export default function Step3Funding({ data, onChange, errors }) {
           </div>
         </Field>
 
-        <Field label="Raised Amount" icon={DollarSign} error={errors.raisedAmount} required>
+        <Field label="Raised Amount (AED)" icon={DollarSign} error={errors.raisedAmount} required>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
             <Input
@@ -49,7 +49,7 @@ export default function Step3Funding({ data, onChange, errors }) {
           </div>
         </Field>
 
-        <Field label="Minimum Investment" icon={DollarSign} error={errors.minimumInvestment} required>
+        <Field label="Minimum Investment (AED)" icon={DollarSign} error={errors.minimumInvestment} required>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
             <Input
@@ -67,7 +67,8 @@ export default function Step3Funding({ data, onChange, errors }) {
             type="date"
             value={data.deadline || ""}
             onChange={(e) => onChange("deadline", e.target.value)}
-            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl cursor-pointer"
+            onClick={(e) => e.currentTarget.showPicker?.()}
+            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl cursor-pointer [color-scheme:dark] w-full"
           />
         </Field>
 
@@ -88,6 +89,42 @@ export default function Step3Funding({ data, onChange, errors }) {
               placeholder="15"
               value={data.growthRate || ""}
               onChange={(e) => onChange("growthRate", e.target.value)}
+              className="pr-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+            />
+            <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">%</span>
+          </div>
+        </Field>
+
+        <Field label="CAC (Customer Acquisition Cost)" icon={Target} error={errors.CAC} required>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+            <Input
+              placeholder="120"
+              value={data.CAC || ""}
+              onChange={(e) => onChange("CAC", e.target.value)}
+              className="pl-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+            />
+          </div>
+        </Field>
+
+        <Field label="LTV (Lifetime Value)" icon={TrendingUp} error={errors.LTV} required>
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+            <Input
+              placeholder="900"
+              value={data.LTV || ""}
+              onChange={(e) => onChange("LTV", e.target.value)}
+              className="pl-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+            />
+          </div>
+        </Field>
+
+        <Field label="Churn Rate (%)" icon={BarChart3} error={errors.CHURN} required>
+          <div className="relative">
+            <Input
+              placeholder="3%"
+              value={data.CHURN || ""}
+              onChange={(e) => onChange("CHURN", e.target.value)}
               className="pr-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
             />
             <span className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40">%</span>

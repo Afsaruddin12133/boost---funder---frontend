@@ -126,8 +126,10 @@ export default function DealDetailPage({ deal, dealId, onBack }) {
 
   const founderContact = activeDeal.founderContact ?? basicInfo.founderContact ?? null;
   const founderPhone =
+    activeDeal.whatsappNumber ??
     activeDeal.founderPhone ??
     activeDeal.founderphone ??
+    basicInfo.whatsappNumber ??
     basicInfo.founderPhone ??
     basicInfo.founderphone ??
     (typeof founderContact === "object" ? founderContact?.phone : null) ??

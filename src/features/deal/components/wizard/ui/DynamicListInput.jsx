@@ -3,7 +3,16 @@ import { Plus, X } from 'lucide-react';
 import { Input } from "@/shared/ui/input";
 import { Button } from "@/shared/ui/button";
 
-export default function DynamicListInput({ items = [], onChange, placeholder1, placeholder2, type = "single" }) {
+export default function DynamicListInput({ 
+  items = [], 
+  onChange, 
+  placeholder1, 
+  placeholder2, 
+  type = "single",
+  key1 = "field1",
+  key2 = "field2",
+  inputType2 = "text"
+}) {
   const [val1, setVal1] = useState("");
   const [val2, setVal2] = useState("");
 
@@ -12,7 +21,7 @@ export default function DynamicListInput({ items = [], onChange, placeholder1, p
       onChange([...items, val1.trim()]);
       setVal1("");
     } else if (type === "double" && val1.trim() && val2.trim()) {
-      onChange([...items, { field1: val1.trim(), field2: val2.trim() }]);
+      onChange([...items, { [key1]: val1.trim(), [key2]: val2.trim() }]);
       setVal1("");
       setVal2("");
     }
@@ -34,6 +43,7 @@ export default function DynamicListInput({ items = [], onChange, placeholder1, p
         />
         {type === "double" && (
           <Input 
+            type={inputType2}
             placeholder={placeholder2} 
             value={val2} 
             onChange={(e) => setVal2(e.target.value)}
@@ -58,8 +68,8 @@ export default function DynamicListInput({ items = [], onChange, placeholder1, p
                 <span className="text-sm text-white/90">{item}</span>
               ) : (
                 <div className="flex gap-4 w-full">
-                  <span className="text-sm text-white/90 flex-1">{item.field1}</span>
-                  <span className="text-sm text-white/60 flex-1">{item.field2}</span>
+                  <span className="text-sm text-white/90 flex-1">{item[key1]}</span>
+                  <span className="text-sm text-white/60 flex-1">{item[key2]}</span>
                 </div>
               )}
               <button 
