@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getVerificationStatus, submitVerification } from "../services/verification.service";
 
-export const useVerificationStatus = () =>
+export const useVerificationStatus = (options = {}) =>
   useQuery({
     queryKey: ["verification-status"],
     queryFn: getVerificationStatus,
     retry: false,
+    ...options
   });
 
 export const useSubmitVerification = () => {

@@ -29,6 +29,9 @@ import toast from "react-hot-toast";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
+import { useInvestorVerificationStatus } from "@/features/verification/hooks/useInvestorVerification";
+import { useActiveSubscription } from "@/features/subscription/hooks/useSubscription";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -113,11 +116,58 @@ function SidebarNavContent({ navItems, currentPath, navigateRouter, onLogout, us
 }
 
 export default function DashboardLayout({ children, userRole, onNavigate, onLogout }) {
-  const { user: authUser } = useAuth();
+  const { user: authUser, updateUser } = useAuth();
+  
+  // Use correct status hook based on role with conditional fetching
+  const founderStatus = useVerificationStatus({ enabled: userRole === 'founder' });
+  const investorStatus = useInvestorVerificationStatus({ enabled: userRole === 'investor' });
+  const verStatus = userRole === 'founder' ? founderStatus.data : investorStatus.data;
+
+  // Monitor active subscription
+  const { data: subData } = useActiveSubscription(!!authUser);
+  
+  const statusString = (verStatus?.verification?.status || "").toLowerCase();
+
+  const isVerified = authUser?.isVerified === true || statusString === "approved";
+  
   const location = useLocation();
   const currentPath = location.pathname;
   const navigateRouter = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Auto-sync isVerified status to localStorage/AuthContext
+  useEffect(() => {
+    if (statusString === "approved" && authUser && !authUser.isVerified) {
+      updateUser({ ...authUser, isVerified: true });
+    }
+  }, [statusString, authUser, updateUser]);
+
+  // Auto-sync subscription plan to localStorage/AuthContext
+  useEffect(() => {
+    if (subData && authUser) {
+      const getRawPlan = (s) => {
+        if (!s) return 'free';
+        if (typeof s === 'string') return s;
+        const p = s.activePlan || s.plan || s.name;
+        if (typeof p === 'string') return p;
+        if (p?.name) return p.name;
+        return 'free';
+      };
+
+      const apiPlan = getRawPlan(subData).toLowerCase();
+      const localPlan = (authUser.subscription?.plan || 'free').toString().toLowerCase();
+      
+      if (apiPlan !== localPlan) {
+        updateUser({
+          ...authUser,
+          subscription: {
+            ...(authUser.subscription || {}),
+            plan: apiPlan
+          }
+        });
+      }
+    }
+  }, [subData, authUser, updateUser]);
 
   // Watch for payment gateway redirects
   useEffect(() => {
@@ -147,7 +197,7 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
   const investorNav = [
     { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard/investor" },
     { name: "Explore Deals", icon: Compass, path: "/dashboard/investor/deals" },
-    { name: "Saved Deals", icon: Bookmark, path: "/dashboard/investor/saved" },
+    { name: "Saved Deals", icon: Bookmark, path: "/dashboard/investor/bookmarks" },
     { name: "Verification", icon: ShieldCheck, path: "/dashboard/investor/verification" },
     { name: "Subscription", icon: CreditCard, path: "/dashboard/investor/subscription" },
     { name: "My Profile", icon: Building, path: "/dashboard/investor/profile" },
@@ -215,7 +265,9 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
                     <span className="text-sm font-semibold text-white group-hover:text-[#01F27B] transition-colors">{authUser?.firstName} {authUser?.lastName}</span>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#01F27B] animate-pulse" />
-                      <span className="text-[10px] text-[#01F27B]/70 font-bold uppercase tracking-widest group-hover:text-[#01F27B] transition-colors">{authUser?.subscription?.plan || 'Free'} Plan</span>
+                      <span className="text-[10px] text-[#01F27B]/70 font-black uppercase tracking-widest group-hover:text-[#01F27B] transition-colors">
+                        {(authUser?.subscription?.plan || 'Free')} Plan
+                      </span>
                     </div>
                   </div>
                   <div className="relative">
@@ -223,7 +275,14 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
                       <AvatarImage src={authUser?.profile?.profileImage || `https://ui-avatars.com/api/?name=${authUser?.firstName}+${authUser?.lastName}&background=01F27B&color=000`} />
                       <AvatarFallback className="bg-[#01F27B]/10 text-[#01F27B]">{authUser?.firstName?.charAt(0)}{authUser?.lastName?.charAt(0)}</AvatarFallback>
                     </Avatar>
-                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#0c0c0c] border border-white/10 rounded-full flex items-center justify-center">
+                    
+                    {isVerified && (
+                      <div className="absolute -top-1 -left-1 w-5 h-5 bg-[#01F27B] rounded-full border-2 border-black flex items-center justify-center z-20 shadow-[0_0_10px_rgba(1,242,123,0.5)]">
+                        <ShieldCheck className="w-3 h-3 text-black" strokeWidth={3} />
+                      </div>
+                    )}
+
+                    <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#0c0c0c] border border-white/10 rounded-full flex items-center justify-center z-20">
                       <ChevronDown className="w-2.5 h-2.5 text-white/40 group-hover:text-[#01F27B] transition-colors" />
                     </div>
                   </div>

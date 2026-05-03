@@ -46,3 +46,13 @@ export const submitDeal = async (id) => {
   return unwrap(response);
 };
 
+export const getSavedDeals = async () => {
+  const response = await api.get("/api/v1/bookmarks/");
+  return unwrap(response);
+};
+
+export const toggleBookmark = async (id) => {
+  const response = await api.post(`/api/v1/bookmarks/${id}`);
+  return unwrap(response);
+};
+

@@ -12,30 +12,33 @@ export default function ExploreDealsList() {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(false);
-  const limit = 9; // Grid of 3x3
+  const [totalDeals, setTotalDeals] = useState(0);
+  const limit = 6; // Set back to 6 as requested
 
-  const fetchDeals = async (pageNum = 1) => {
+  // Updating fetchDeals to set totalDeals
+  const fetchDealsWithTotal = async (pageNum = 1) => {
     try {
       setLoading(true);
       setError(null);
-      // Fetch data from GET /api/v1/deals/feed
       const response = await api.get(`/api/v1/deals/feed?page=${pageNum}&limit=${limit}`);
-      
       const rawData = response?.data || response;
-      const newDeals = resolveDealList(rawData);
-      const total = response?.data?.total || 0;
       
-      if (pageNum === 1) {
-        setDeals(newDeals);
+      // Handle different response shapes
+      let newDeals = [];
+      let total = 0;
+      
+      if (Array.isArray(rawData)) {
+        newDeals = rawData;
+        total = rawData.length;
       } else {
-        setDeals(prev => [...prev, ...newDeals]);
+        newDeals = resolveDealList(rawData);
+        // Correctly extract total from nested pagination or top-level properties
+        total = rawData?.pagination?.total || rawData?.total || response?.data?.total || response?.total || newDeals.length;
       }
       
-      if (newDeals.length === limit || (pageNum * limit < total)) {
-        setHasMore(true);
-      } else {
-        setHasMore(false);
-      }
+      setDeals(newDeals);
+      setTotalDeals(total);
+      setPage(pageNum);
     } catch (err) {
       setError(err.message || "Failed to load deals.");
     } finally {
@@ -44,16 +47,11 @@ export default function ExploreDealsList() {
   };
 
   useEffect(() => {
-    fetchDeals(1);
+    fetchDealsWithTotal(1);
   }, []);
 
-  const loadMore = () => {
-    const nextPage = page + 1;
-    setPage(nextPage);
-    fetchDeals(nextPage);
-  };
+  const totalPagesCount = Math.ceil(totalDeals / limit);
 
-  // Skeleton Loader for initial loading state
   if (loading && page === 1) {
     return (
       <div className="space-y-8">
@@ -70,13 +68,7 @@ export default function ExploreDealsList() {
               </div>
               <div className="w-3/4 h-6 bg-white/10 rounded mb-2" />
               <div className="w-1/2 h-4 bg-white/5 rounded mb-auto" />
-              
-              <div className="flex justify-between items-end mb-3 mt-6">
-                <div className="w-1/3 h-6 bg-white/10 rounded" />
-                <div className="w-1/4 h-5 bg-white/10 rounded" />
-              </div>
-              <div className="w-full h-1.5 bg-white/5 rounded-full mb-6" />
-              <div className="w-full h-10 bg-white/5 rounded-lg" />
+              <div className="w-full h-10 bg-white/5 rounded-lg mt-6" />
             </div>
           ))}
         </div>
@@ -84,53 +76,96 @@ export default function ExploreDealsList() {
     );
   }
 
-  if (error && page === 1) {
-    return (
-      <div className="w-full flex flex-col items-center justify-center min-h-[400px] text-center">
-        <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
-        <h3 className="text-xl font-bold text-white mb-2">Failed to load deals</h3>
-        <p className="text-white/60 mb-6">{error}</p>
-        <Button onClick={() => fetchDeals(1)} className="bg-[#01F27B] text-black hover:bg-[#01F27B]/90 font-semibold">
-          Try Again
-        </Button>
-      </div>
-    );
-  }
-
-  if (!loading && deals.length === 0) {
-    return (
-      <div className="w-full flex flex-col items-center justify-center min-h-[400px] text-center border border-dashed border-white/10 rounded-2xl bg-[#0c0c0c] p-8">
-        <Compass className="w-12 h-12 text-white/20 mb-4" />
-        <h3 className="text-xl font-bold text-white mb-2">No Deals Found</h3>
-        <p className="text-white/60">There are currently no active deals to explore. Check back later.</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 pb-12">
       <div>
-        <h1 className="text-3xl font-bold text-white tracking-tight">Explore Deals</h1>
-        <p className="text-white/60 mt-1">Discover and invest in high-growth startups.</p>
+        <h1 className="text-3xl lg:text-4xl font-black text-white tracking-tighter uppercase italic">Explore <span className="text-[#01F27B]">Market</span></h1>
+        <p className="text-white/40 mt-1 font-medium italic">Discover and invest in high-growth startups.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 overflow-hidden">
         {deals.map((deal, idx) => (
-          <ExploreDealCard key={deal.id || deal._id || idx} deal={deal} />
+          <div key={deal.id || deal._id || idx} className="scrollbar-none overflow-hidden h-full">
+            <ExploreDealCard deal={deal} />
+          </div>
         ))}
       </div>
 
-      {hasMore && (
-        <div className="flex justify-center mt-8">
-          <Button 
-            variant="outline" 
-            className="border-white/10 hover:bg-white/5 text-white"
-            onClick={loadMore}
-            disabled={loading}
-          >
-            {loading ? <Loader size="sm" className="mr-2" /> : null}
-            Load More Deals
-          </Button>
+      {deals.length > 0 && (
+        <div className="flex flex-col items-center gap-6 py-12 border-t border-white/5 mt-12">
+          <div className="flex items-center gap-3 bg-white/[0.03] backdrop-blur-xl border border-white/10 p-2 rounded-2xl shadow-2xl">
+            <Button
+              variant="ghost"
+              disabled={page === 1 || loading}
+              onClick={() => {
+                fetchDealsWithTotal(page - 1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="text-white/40 hover:text-[#01F27B] disabled:opacity-10 transition-all font-black uppercase text-[10px] tracking-[0.2em] px-5 h-10 rounded-xl hover:bg-[#01F27B]/10 group/prev"
+            >
+              <div className="flex items-center gap-2">
+                <span className="group-hover/prev:-translate-x-1 transition-transform">←</span>
+                <span>Back</span>
+              </div>
+            </Button>
+            
+            <div className="h-6 w-px bg-white/10 mx-2" />
+
+            <div className="flex items-center gap-4 px-4">
+              {[...Array(Math.max(1, totalPagesCount))].map((_, i) => {
+                const pageNum = i + 1;
+                const isActive = page === pageNum;
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => {
+                      if (isActive) return;
+                      fetchDealsWithTotal(pageNum);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    disabled={loading || totalPagesCount <= 1}
+                    className="relative group/page flex items-center justify-center disabled:cursor-default"
+                  >
+                    {isActive && (
+                      <div className="absolute inset-0 bg-[#01F27B] blur-[10px] rounded-full opacity-40 animate-pulse" />
+                    )}
+                    <div className={`
+                      relative w-2.5 h-2.5 rounded-full transition-all duration-500
+                      ${isActive ? 'bg-[#01F27B] scale-125' : 'bg-white/20 group-hover/page:bg-white/40 group-hover/page:scale-110'}
+                      ${totalPagesCount <= 1 && !isActive ? 'opacity-20' : ''}
+                    `} />
+                    <span className={`
+                      absolute -top-8 text-[9px] font-black tracking-widest transition-all duration-300
+                      ${isActive ? 'text-[#01F27B] opacity-100' : 'text-white/20 opacity-0 group-hover/page:opacity-100'}
+                    `}>
+                      0{pageNum}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="h-6 w-px bg-white/10 mx-2" />
+
+            <Button
+              variant="ghost"
+              disabled={page === totalPagesCount || totalPagesCount <= 1 || loading}
+              onClick={() => {
+                fetchDealsWithTotal(page + 1);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="text-white/40 hover:text-[#01F27B] disabled:opacity-10 transition-all font-black uppercase text-[10px] tracking-[0.2em] px-5 h-10 rounded-xl hover:bg-[#01F27B]/10 group/next"
+            >
+              <div className="flex items-center gap-2">
+                <span>Next</span>
+                <span className="group-hover/next:translate-x-1 transition-transform">→</span>
+              </div>
+            </Button>
+          </div>
+          
+          <p className="text-[10px] font-black text-white/20 uppercase tracking-[0.3em]">
+            Viewing page <span className="text-white/40">{page}</span> of <span className="text-white/40">{Math.max(1, totalPagesCount)}</span>
+          </p>
         </div>
       )}
     </div>

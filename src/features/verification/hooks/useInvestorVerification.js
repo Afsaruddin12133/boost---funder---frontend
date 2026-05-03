@@ -4,11 +4,12 @@ import {
     submitInvestorVerification,
 } from "../services/investorVerification.service";
 
-export const useInvestorVerificationStatus = () =>
+export const useInvestorVerificationStatus = (options = {}) =>
   useQuery({
     queryKey: ["investor-verification-status"],
     queryFn: getInvestorVerificationStatus,
     retry: false,
+    ...options
   });
 
 export const useSubmitInvestorVerification = () => {

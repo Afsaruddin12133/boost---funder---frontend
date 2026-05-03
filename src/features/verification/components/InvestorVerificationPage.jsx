@@ -19,6 +19,7 @@ import {
     useInvestorVerificationStatus,
     useSubmitInvestorVerification,
 } from "../hooks/useInvestorVerification";
+import { useAuth } from "../../auth/hooks/useAuth";
 
 const DOC_TYPES = [
   {
@@ -157,7 +158,7 @@ function FileDropZone({
           setDragging(false);
           onPick(e.dataTransfer.files);
         }}
-        className={`relative cursor-pointer rounded-xl border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center text-center p-6 min-h-[160px] ${
+        className={`relative cursor-pointer rounded-xl border-2 border-dashed transition-all duration-200 flex flex-col items-center justify-center text-center p-4 min-h-[120px] ${
           disabled
             ? "border-white/5 bg-white/[0.02] opacity-60 cursor-not-allowed"
             : file
@@ -226,6 +227,7 @@ export default function InvestorVerificationPage() {
     isLoading: statusLoading,
     refetch: refetchStatus,
   } = useInvestorVerificationStatus();
+  const { user } = useAuth();
   const submitMutation = useSubmitInvestorVerification();
 
   const [step, setStep] = useState(0);
@@ -233,9 +235,41 @@ export default function InvestorVerificationPage() {
   const [files, setFiles] = useState({});
   const [errors, setErrors] = useState({});
   const [allowResubmit, setAllowResubmit] = useState(false);
+  const [isStarted, setIsStarted] = useState(false);
+  const [isRecentlySubmitted, setIsRecentlySubmitted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    try {
+      const userRaw = localStorage.getItem("boostfundr_user");
+      if (userRaw) {
+        const u = JSON.parse(userRaw);
+        if (u?.id) {
+          return localStorage.getItem(`investor_verification_submitted_${u.id}`) === "true";
+        }
+      }
+    } catch (e) {
+      console.error("Error reading persistence flag", e);
+    }
+    return false;
+  });
 
-  const status = statusData?.status || null;
-  const rejectionReason = statusData?.rejectionReason || null;
+  const status = statusData?.verification?.status || statusData?.status || null;
+  const rejectionReason = statusData?.verification?.rejectionReason || statusData?.rejectionReason || null;
+
+  // Persist submission state
+  useEffect(() => {
+    if (!user?.id) return;
+    const storageKey = `investor_verification_submitted_${user.id}`;
+    const wasSubmitted = localStorage.getItem(storageKey);
+
+    if (wasSubmitted === "true") {
+      if (status === "pending" || status === "approved" || status === "rejected") {
+        localStorage.removeItem(storageKey);
+        setIsRecentlySubmitted(false);
+      } else {
+        setIsRecentlySubmitted(true);
+      }
+    }
+  }, [status, user?.id]);
 
   const selectedDocType = useMemo(
     () => DOC_TYPES.find((d) => d.id === selectedType) || null,
@@ -318,7 +352,6 @@ export default function InvestorVerificationPage() {
     }
 
     const formData = new FormData();
-
     if (selectedType === "nic") {
       formData.append("nicFront", files.nicFront);
       formData.append("nicBack", files.nicBack);
@@ -327,14 +360,18 @@ export default function InvestorVerificationPage() {
     } else if (selectedType === "drivingLicence") {
       formData.append("drivingLicence", files.drivingLicence);
     }
-
     formData.append("selfie", files.selfie);
 
     submitMutation.mutate(formData, {
       onSuccess: () => {
         toast.success("Documents submitted for review.");
+        if (user?.id) {
+          localStorage.setItem(`investor_verification_submitted_${user.id}`, "true");
+        }
+        setIsRecentlySubmitted(true);
         resetForm();
         setAllowResubmit(false);
+        refetchStatus();
       },
       onError: (err) => {
         const message = err?.message || "Submission failed. Please try again.";
@@ -354,331 +391,233 @@ export default function InvestorVerificationPage() {
   }
 
   const meta = STATUS_META[status];
-  const showForm = status === null || (status === "rejected" && allowResubmit);
-  const lockForm = status === "pending" || status === "approved";
+  const showForm = !isRecentlySubmitted && ((status === null && isStarted) || (status === "rejected" && allowResubmit));
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold flex items-center gap-3">
-          <ShieldCheck className="w-6 h-6 text-[#01F27B]" />
-          Investor Verification
-        </h1>
-        <p className="text-white/50 text-sm mt-1">
-          Verify your identity to unlock trusted investor features and priority deal access.
-        </p>
+    <div className="w-full pb-8 space-y-6 md:space-y-8 animate-in fade-in duration-700">
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 md:gap-6 border-b border-white/5 pb-6 md:pb-8">
+        <div>
+          <div className="flex items-center gap-2.5 mb-1 md:mb-1.5">
+            <ShieldCheck className="w-6 h-6 text-[#01F27B] md:hidden shrink-0" />
+            <h1 className="text-2xl md:text-4xl font-bold md:font-black tracking-normal md:tracking-tighter text-white uppercase italic">Investor Verification</h1>
+          </div>
+          <p className="text-white/50 md:text-white/40 text-sm md:text-base md:font-medium md:tracking-wide">
+            Verify your identity to unlock premium investor features and priority deal access.
+          </p>
+        </div>
       </div>
 
-      {meta && (
-        <Card className={`border p-5 ${meta.bg}`}>
-          <div className="flex items-start gap-4">
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-              status === "approved"
-                ? "bg-[#01F27B]/20"
-                : status === "pending"
-                ? "bg-amber-500/20"
-                : "bg-red-500/20"
-            }`}>
-              <meta.icon className={`w-5 h-5 ${meta.color}`} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-semibold text-white">{meta.headline}</span>
-                <Badge className={`text-[10px] border ${meta.badge}`}>{meta.label}</Badge>
-              </div>
-              <p className="text-sm text-white/60">{meta.sub}</p>
-              {status === "rejected" && rejectionReason && (
-                <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
-                  <p className="text-xs font-semibold text-red-400 mb-1">Reason for rejection:</p>
-                  <p className="text-sm text-white/70">{rejectionReason}</p>
-                </div>
-              )}
-            </div>
-          </div>
+      <div className="max-w-3xl mx-auto w-full">
+        <Card className="bg-gradient-to-br from-[#0a1b12] via-[#060f0a] to-[#0b1f14] border-white/10 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-[#01F27B]/5 rounded-full blur-[80px] pointer-events-none" />
 
-          {status === "approved" && (
-            <div className="mt-4 flex items-center gap-2 p-3 rounded-lg bg-[#01F27B]/10">
-              <CheckCircle className="w-4 h-4 text-[#01F27B] shrink-0" />
-              <p className="text-xs text-white/70">
-                Your <span className="text-[#01F27B] font-medium">Verified</span> badge is now visible on your investor profile.
-              </p>
+          <div className="p-6 md:p-8 space-y-8 relative z-10">
+            {status === "rejected" && allowResubmit && meta && (
+              <div className={`border p-5 rounded-xl ${meta.bg}`}>
+                <div className="flex items-start gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-red-500/20`}>
+                    <meta.icon className={`w-5 h-5 ${meta.color}`} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-semibold text-white">{meta.headline}</span>
+                      <Badge className={`text-[10px] border ${meta.badge}`}>{meta.label}</Badge>
+                    </div>
+                    <p className="text-sm text-white/60">{meta.sub}</p>
+                    {rejectionReason && (
+                      <div className="mt-3 p-3 rounded-lg bg-red-500/10 border border-red-500/20">
+                        <p className="text-xs font-semibold text-red-400 mb-1">Reason for rejection:</p>
+                        <p className="text-sm text-white/70">{rejectionReason}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!status && !isStarted && !isRecentlySubmitted && (
+              <div className="flex flex-col items-center justify-center p-10 md:p-14 text-center rounded-2xl border border-[#01F27B]/20 bg-gradient-to-b from-[#01F27B]/5 to-transparent relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#01F27B]/50 to-transparent" />
+                <div className="w-20 h-20 rounded-full bg-[#01F27B]/10 flex items-center justify-center mb-6 border border-[#01F27B]/20 shadow-[0_0_30px_rgba(1,242,123,0.15)]">
+                  <ShieldCheck className="w-10 h-10 text-[#01F27B]" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3 uppercase tracking-tight">Verification Required</h2>
+                <p className="text-white/60 max-w-md mx-auto mb-8 leading-relaxed">
+                  Verify your identity to unlock premium investment opportunities, access private pitch decks, and connect with top-tier startup founders.
+                </p>
+                <Button 
+                  onClick={() => setIsStarted(true)}
+                  className="bg-[#01F27B] hover:bg-[#00d66d] text-black font-black rounded-xl px-8 h-12 shadow-[0_0_20px_rgba(1,242,123,0.3)] hover:scale-[1.02] transition-all flex items-center gap-2"
+                >
+                  Start Verification
+                  <ChevronRight className="w-5 h-5 ml-1" />
+                </Button>
+              </div>
+            )}
+
+            {status === "approved" && (
+              <div className="flex flex-col items-center justify-center p-10 md:p-14 text-center rounded-2xl border border-[#01F27B]/20 bg-gradient-to-b from-[#01F27B]/5 to-transparent relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[#01F27B]/50 to-transparent" />
+                <div className="w-20 h-20 rounded-full bg-[#01F27B]/10 flex items-center justify-center mb-6 border border-[#01F27B]/20 shadow-[0_0_30px_rgba(1,242,123,0.15)]">
+                  <CheckCircle className="w-10 h-10 text-[#01F27B]" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3">Verified Investor</h2>
+                <p className="text-white/60 max-w-md mx-auto mb-6 leading-relaxed">
+                  Your identity has been successfully verified. You now have full access to the BoostFundr investment platform.
+                </p>
+                <Badge className="bg-[#01F27B]/10 text-[#01F27B] border border-[#01F27B]/30 px-4 py-1.5 text-sm uppercase font-black">
+                  Elite Investor
+                </Badge>
+              </div>
+            )}
+
+            {(status === "pending" || isRecentlySubmitted) && (
+              <div className="flex flex-col items-center justify-center p-10 md:p-14 text-center rounded-2xl border border-amber-500/20 bg-gradient-to-b from-amber-500/5 to-transparent relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-amber-500/50 to-transparent" />
+                <div className="relative mb-8">
+                  <div className="w-24 h-24 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-[0_0_40px_rgba(245,158,11,0.2)]">
+                    <Clock className="w-12 h-12 text-amber-400" />
+                  </div>
+                  <div className="absolute -inset-2 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-[spin_3s_linear_infinite]" />
+                </div>
+                <div className="space-y-4 max-w-lg">
+                  <Badge className="bg-amber-500/10 text-amber-500 border border-amber-500/30 px-3 py-1 rounded-full text-[10px] uppercase font-black tracking-widest">Awaiting Review</Badge>
+                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-tighter italic">Compliance in Progress</h2>
+                  <p className="text-white/60 text-sm md:text-base leading-relaxed">
+                    We are currently validating your investor credentials. You will receive an email and dashboard notification once approved.
+                  </p>
+                  <div className="pt-4 p-4 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-sm">
+                    <p className="text-xs text-white/40 font-medium">Standard processing time: <span className="text-white/70 font-bold">24 Hours</span></p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {status === "rejected" && !allowResubmit && (
+              <div className="flex flex-col items-center justify-center p-10 md:p-14 text-center rounded-2xl border border-red-500/20 bg-gradient-to-b from-red-500/5 to-transparent relative overflow-hidden">
+                <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-red-500/50 to-transparent" />
+                <div className="w-20 h-20 rounded-full bg-red-500/10 flex items-center justify-center mb-6 border border-red-500/20 shadow-[0_0_30px_rgba(239,68,68,0.15)]">
+                  <ShieldX className="w-10 h-10 text-red-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-white mb-3 italic">Update Required</h2>
+                <p className="text-white/60 max-w-md mx-auto mb-8 leading-relaxed">
+                  Our compliance team flagged an issue: <span className="text-red-400 font-medium">{rejectionReason || "Illegible document photo."}</span>
+                </p>
+                <Button onClick={() => { resetForm(); setAllowResubmit(true); }} className="bg-[#01F27B] hover:bg-[#00d66d] text-black font-black rounded-xl px-8 h-12 shadow-[0_0_20px_rgba(1,242,123,0.3)] hover:scale-[1.02] transition-all flex items-center gap-2">
+                  <RefreshCw className="w-5 h-5" />
+                  Try Again
+                </Button>
+              </div>
+            )}
+
+            {showForm && (
+              <div className="space-y-8">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white uppercase tracking-wider">Verification Steps</h3>
+                    <p className="text-xs text-white/40">Step {step + 1} of {STEPS.length}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {STEPS.map((item, index) => {
+                    const isActive = index === step;
+                    const isComplete = index < step;
+                    return (
+                      <div key={item.id} className={`flex flex-col items-center justify-center gap-2 rounded-xl border p-2 transition-all duration-300 ${isActive ? "border-[#01F27B]/40 bg-[#01F27B]/10" : isComplete ? "border-[#01F27B]/20 bg-[#01F27B]/5" : "border-white/10 bg-white/[0.02]"}`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-semibold ${isComplete ? "bg-[#01F27B] text-black" : isActive ? "bg-[#01F27B]/20 text-[#01F27B]" : "bg-white/10 text-white/40"}`}>
+                          {isComplete ? <CheckCircle className="w-4 h-4" /> : item.id}
+                        </div>
+                        <span className={`text-[8px] font-black uppercase tracking-tighter hidden md:block ${isActive ? "text-white" : "text-white/60"}`}>{item.label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="border-t border-white/5 pt-6">
+                  {step === 0 && (
+                    <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-4">
+                      <h3 className="text-sm font-semibold text-white">Choose Document Type</h3>
+                      <div className="space-y-3">
+                        {DOC_TYPES.map((doc) => (
+                          <button key={doc.id} type="button" onClick={() => setSelectedType(doc.id)} className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all ${selectedType === doc.id ? "border-[#01F27B]/60 bg-[#01F27B]/10" : "border-white/10 bg-white/[0.02] hover:bg-white/5"}`}>
+                            <div className="flex items-center gap-3">
+                              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selectedType === doc.id ? "border-[#01F27B] bg-[#01F27B]" : "border-white/30"}`}>
+                                {selectedType === doc.id && <div className="w-2 h-2 rounded-full bg-black" />}
+                              </div>
+                              <div>
+                                <p className={`text-sm font-bold ${selectedType === doc.id ? "text-[#01F27B]" : "text-white/80"}`}>{doc.label}</p>
+                                <p className="text-xs text-white/40">{doc.description}</p>
+                              </div>
+                            </div>
+                            <ChevronRight className={`w-4 h-4 ${selectedType === doc.id ? "text-[#01F27B]" : "text-white/20"}`} />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 1 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                      <h3 className="text-sm font-semibold text-white">Upload Your Document</h3>
+                      <div className={`grid gap-3 ${selectedDocType?.fields.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
+                        {selectedDocType?.fields.map((field) => (
+                          <FileDropZone key={field.key} fieldKey={field.key} label={field.label} hint={field.hint} file={files[field.key] || null} error={errors[field.key]} onChange={handleFileChange} />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 2 && (
+                    <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-500">
+                      <h3 className="text-sm font-semibold text-white">Security Selfie</h3>
+                      <FileDropZone fieldKey="selfie" label="Your Live Selfie" hint="Ensure your face matches your ID card" file={files.selfie || null} error={errors.selfie} onChange={handleFileChange} />
+                      <div className="flex items-start gap-2 p-3 rounded-lg bg-white/5 text-[10px] text-white/40">
+                        <Camera className="w-3.5 h-3.5 shrink-0" />
+                        Live face matching is required for investor status to prevent fraudulent access to private deals.
+                      </div>
+                    </div>
+                  )}
+
+                  {step === 3 && (
+                    <div className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-500">
+                      <h3 className="text-sm font-semibold text-white">Final Review</h3>
+                      <div className="space-y-2">
+                        {requiredKeys.map((key) => (
+                          <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
+                            <div className="flex items-center gap-3">
+                              <FileText className="w-4 h-4 text-white/30" />
+                              <div className="text-left">
+                                <p className="text-xs text-white/70 font-bold">{fieldLabels[key]}</p>
+                                <p className="text-[10px] text-white/30 truncate max-w-[150px]">{files[key]?.name}</p>
+                              </div>
+                            </div>
+                            <Badge className="text-[10px] bg-[#01F27B]/10 text-[#01F27B] border-0">Ready</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {showForm && (
+            <div className="border-t border-white/5 p-6 bg-black/20 flex justify-between gap-3 relative z-10">
+              <Button type="button" variant="outline" onClick={() => setStep(s => s - 1)} disabled={step === 0} className="border-white/10 text-white/60 hover:text-white rounded-xl px-6">Back</Button>
+              {step < 3 ? (
+                <Button type="button" onClick={handleNext} className="bg-[#01F27B] hover:bg-[#00d66d] text-black font-black rounded-xl px-8 shadow-[0_0_20px_rgba(1,242,123,0.2)]">Continue</Button>
+              ) : (
+                <Button type="button" onClick={handleSubmit} disabled={!canSubmit || submitMutation.isPending} className="bg-[#01F27B] hover:bg-[#00d66d] text-black font-black rounded-xl px-8 shadow-[0_0_20px_rgba(1,242,123,0.3)]">
+                  {submitMutation.isPending ? "Submitting..." : "Submit for Verification"}
+                </Button>
+              )}
             </div>
           )}
         </Card>
-      )}
-
-      {!status && (
-        <Card className="border border-white/10 bg-white/[0.02] p-5">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
-              <Lock className="w-5 h-5 text-white/40" />
-            </div>
-            <div>
-              <p className="font-medium text-white">Not verified yet</p>
-              <p className="text-sm text-white/50 mt-0.5">Submit your identity document and selfie to begin verification.</p>
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {status === "rejected" && !allowResubmit && (
-        <Card className="bg-[#0c0c0c] border-white/10 p-6 text-center">
-          <AlertTriangle className="w-10 h-10 text-red-400 mx-auto mb-3" />
-          <p className="font-semibold text-white mb-2">Update your documents</p>
-          <p className="text-sm text-white/50 max-w-sm mx-auto">
-            Fix the issues listed above and re-submit your documents to continue.
-          </p>
-          <Button
-            onClick={() => {
-              resetForm();
-              setAllowResubmit(true);
-            }}
-            className="mt-5 w-full bg-[#01F27B] hover:bg-[#01F27B]/90 text-black font-semibold rounded-xl"
-          >
-            Re-submit documents
-          </Button>
-        </Card>
-      )}
-
-      {status === "pending" && (
-        <Card className="bg-[#0c0c0c] border-white/10 p-6 text-center">
-          <Clock className="w-10 h-10 text-amber-400 mx-auto mb-3" />
-          <p className="font-semibold text-white mb-2">Review in progress</p>
-          <p className="text-sm text-white/50 max-w-sm mx-auto">
-            Your documents are being reviewed by our compliance team. You will be notified once a decision is made.
-          </p>
-          <p className="text-xs text-white/30 mt-4">Re-submission is locked while your documents are under review.</p>
-        </Card>
-      )}
-
-      {showForm && (
-        <Card className="bg-[#0c0c0c] border-white/10 p-6 space-y-6">
-          <div className="flex items-start gap-3 p-4 rounded-xl bg-white/5 border border-white/5">
-            <ShieldCheck className="w-4 h-4 text-[#01F27B] mt-0.5 shrink-0" />
-            <p className="text-xs text-white/50 leading-relaxed">
-              Your documents are encrypted and stored securely. They are only used to verify your identity and are never shared with third parties.
-            </p>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-semibold text-white">Verification Steps</h3>
-                  <p className="text-xs text-white/40">Follow the steps to complete verification</p>
-                </div>
-                <Badge className="text-[10px] border border-white/10 bg-white/5 text-white/60">
-                  Step {step + 1} of {STEPS.length}
-                </Badge>
-              </div>
-              <div className="flex flex-col md:flex-row gap-3">
-                {STEPS.map((item, index) => {
-                  const isActive = index === step;
-                  const isComplete = index < step;
-                  return (
-                    <div
-                      key={item.id}
-                      className={`flex items-center gap-3 rounded-xl border px-4 py-3 flex-1 transition-all ${
-                        isActive
-                          ? "border-[#01F27B]/40 bg-[#01F27B]/10"
-                          : isComplete
-                          ? "border-[#01F27B]/20 bg-[#01F27B]/5"
-                          : "border-white/10 bg-white/[0.02]"
-                      }`}
-                    >
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold ${
-                        isComplete
-                          ? "bg-[#01F27B] text-black"
-                          : isActive
-                          ? "bg-[#01F27B]/20 text-[#01F27B]"
-                          : "bg-white/10 text-white/40"
-                      }`}>
-                        {isComplete ? <CheckCircle className="w-4 h-4" /> : item.id}
-                      </div>
-                      <span className={`text-xs font-medium ${isActive ? "text-white" : "text-white/60"}`}>{item.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-
-          <div className="border-t border-white/5 pt-6 space-y-6">
-            {step === 0 && (
-              <div>
-                <h3 className="text-sm font-semibold text-white mb-1">Step 1 - Choose document type</h3>
-                <p className="text-xs text-white/40 mb-4">Select one option only</p>
-                <div className="space-y-3">
-                  {DOC_TYPES.map((doc) => (
-                    <button
-                      key={doc.id}
-                      type="button"
-                      onClick={() => {
-                        if (lockForm) return;
-                        setSelectedType(doc.id);
-                        setFiles((prev) => ({ ...prev, nicFront: null, nicBack: null, passport: null, drivingLicence: null }));
-                        setErrors((prev) => ({ ...prev, nicFront: null, nicBack: null, passport: null, drivingLicence: null }));
-                      }}
-                      className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all ${
-                        selectedType === doc.id
-                          ? "border-[#01F27B]/60 bg-[#01F27B]/5"
-                          : "border-white/10 bg-white/[0.02] hover:border-white/20 hover:bg-white/5"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                          selectedType === doc.id
-                            ? "border-[#01F27B] bg-[#01F27B]"
-                            : "border-white/30"
-                        }`}>
-                          {selectedType === doc.id && <div className="w-2 h-2 rounded-full bg-black" />}
-                        </div>
-                        <div>
-                          <p className={`text-sm font-medium ${selectedType === doc.id ? "text-[#01F27B]" : "text-white/80"}`}>
-                            {doc.label}
-                          </p>
-                          <p className="text-xs text-white/40">{doc.description}</p>
-                        </div>
-                      </div>
-                      <ChevronRight className={`w-4 h-4 transition-all ${selectedType === doc.id ? "text-[#01F27B]" : "text-white/20"}`} />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {step === 1 && (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-white mb-1">Step 2 - Upload your document</h3>
-                  <p className="text-xs text-white/40 mb-4">Accepted: JPG, JPEG, PNG, WebP, PDF. Max file size: 5 MB per file.</p>
-                </div>
-                {selectedDocType ? (
-                  selectedDocType.fields.map((field) => (
-                    <FileDropZone
-                      key={field.key}
-                      fieldKey={field.key}
-                      label={field.label}
-                      hint={field.hint}
-                      file={files[field.key] || null}
-                      error={errors[field.key]}
-                      onChange={handleFileChange}
-                      disabled={lockForm}
-                    />
-                  ))
-                ) : (
-                  <div className="flex items-center gap-2 text-amber-400">
-                    <AlertTriangle className="w-4 h-4 shrink-0" />
-                    <p className="text-xs">Select a document type to continue.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {step === 2 && (
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-semibold text-white mb-1">Step 3 - Upload a selfie</h3>
-                  <p className="text-xs text-white/40 mb-4">Make sure your face is clear, well-lit, and matches your ID.</p>
-                </div>
-                <FileDropZone
-                  fieldKey="selfie"
-                  label="Selfie"
-                  hint="Use a live selfie. Avoid hats or sunglasses."
-                  file={files.selfie || null}
-                  error={errors.selfie}
-                  onChange={handleFileChange}
-                  disabled={lockForm}
-                />
-                <div className="flex items-start gap-2 text-xs text-white/40">
-                  <Camera className="w-4 h-4 text-white/40 shrink-0" />
-                  Your selfie is only used for identity matching and is stored securely.
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="space-y-5">
-                <div>
-                  <h3 className="text-sm font-semibold text-white mb-1">Step 4 - Review and submit</h3>
-                  <p className="text-xs text-white/40">Confirm your files before submitting.</p>
-                </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <p className="text-xs text-white/60">Document Type</p>
-                    <span className="text-xs font-medium text-white">{selectedDocType?.label || "-"}</span>
-                  </div>
-
-                  <div className="space-y-2">
-                    {requiredKeys.map((key) => (
-                      <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
-                            <FileText className="w-4 h-4 text-white/40" />
-                          </div>
-                          <div>
-                            <p className="text-xs text-white/70">{fieldLabels[key] || key}</p>
-                            <p className="text-xs text-white/40">
-                              {files[key]?.name || "Missing file"}
-                            </p>
-                          </div>
-                        </div>
-                        {files[key] ? (
-                          <Badge className="text-[10px] border border-[#01F27B]/30 bg-[#01F27B]/10 text-[#01F27B]">Ready</Badge>
-                        ) : (
-                          <Badge className="text-[10px] border border-red-500/30 bg-red-500/10 text-red-400">Missing</Badge>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="border-t border-white/5 pt-6 flex flex-col sm:flex-row gap-3 justify-between">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setStep((prev) => Math.max(0, prev - 1))}
-              disabled={step === 0}
-              className="border-white/10 text-white/70 hover:bg-white/5 rounded-xl"
-            >
-              Back
-            </Button>
-
-            {step < 3 ? (
-              <Button
-                type="button"
-                onClick={handleNext}
-                className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black font-semibold rounded-xl"
-              >
-                Continue
-              </Button>
-            ) : (
-              <Button
-                type="button"
-                onClick={handleSubmit}
-                disabled={!canSubmit}
-                className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black font-semibold rounded-xl disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                {submitMutation.isPending ? (
-                  <span className="flex items-center gap-2">
-                    <Loader size="sm" />
-                    Submitting...
-                  </span>
-                ) : (
-                  <span className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4" />
-                    Submit for Verification
-                  </span>
-                )}
-              </Button>
-            )}
-          </div>
-        </Card>
-      )}
+      </div>
     </div>
   );
 }

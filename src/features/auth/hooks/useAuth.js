@@ -80,8 +80,7 @@ export function useAuth() {
       const res = await loginUser({ email, password });
       if (!res?.data?.token) throw new Error(res?.message || "Login failed.");
       const userData = {
-        ...res.data.user,
-        isVerified: false
+        ...res.data.user
       };
 
       console.log("userData", userData);
@@ -126,8 +125,7 @@ export function useAuth() {
       
       // Ensure the user is not automatically verified just by social login
       const userData = {
-        ...res.data.user,
-        isVerified: false
+        ...res.data.user
       };
 
       console.log(userData);
@@ -154,8 +152,7 @@ export function useAuth() {
       
       // Ensure the user is not automatically verified just by social login
       const userData = {
-        ...res.data.user,
-        isVerified: false
+        ...res.data.user
       };
       
       _persist(res.data.token, userData);
@@ -178,8 +175,12 @@ export function useAuth() {
     navigate("/login", { replace: true });
   }, [navigate]);
 
-  // ── Helpers ─────────────────────────────────────────────────────────────
-  const getUser = useCallback(() => user, [user]);
+  // ── Sync Helper ────────────────────────────────────────────────────────
+  const updateUser = useCallback((userData) => {
+    if (!userData) return;
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData));
+    window.dispatchEvent(new Event("auth-change"));
+  }, []);
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -195,7 +196,7 @@ export function useAuth() {
     loginWithGoogle,
     loginWithFacebook,
     logout,
-    getUser,
+    updateUser,
     clearError,
   };
 }

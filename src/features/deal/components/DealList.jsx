@@ -89,11 +89,24 @@ export default function DealList({ onNavigate, onEdit, onView, onCreate, compact
   if (!deals.length) {
     if (compact) {
       return (
-        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
-          <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center mb-4 border border-white/10">
-            <FilePlus className="w-6 h-6 text-white/20" />
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center h-full">
+          <div className="w-16 h-16 bg-white/5 rounded-3xl flex items-center justify-center mb-4 border border-white/10 group-hover:border-[#01F27B]/20 transition-colors">
+            <Rocket className="w-8 h-8 text-[#01F27B]/40 group-hover:text-[#01F27B] transition-colors" />
           </div>
-          <p className="text-sm text-white/40 font-medium">No deals found</p>
+          <h4 className="text-white font-bold mb-1">No activity yet</h4>
+          <p className="text-sm text-white/40 font-medium mb-6">Launch your first deal to start tracking activity.</p>
+          {onCreate && (
+            <div className="relative group/btn">
+              <div className="absolute inset-0 bg-[#01F27B] blur-[15px] rounded-xl opacity-20 group-hover/btn:opacity-40 transition-opacity" />
+              <Button 
+                onClick={onCreate}
+                className="relative bg-[#01F27B] hover:bg-[#00d66d] text-black font-black rounded-xl px-6 h-10 transition-all border border-[#01F27B]/50"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create New Deal
+              </Button>
+            </div>
+          )}
         </div>
       );
     }

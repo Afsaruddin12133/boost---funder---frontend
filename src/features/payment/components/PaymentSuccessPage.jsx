@@ -3,9 +3,16 @@ import { CheckCircle2, ArrowRight } from 'lucide-react';
 import { Button } from '@/shared/ui/button';
 import { Card } from '@/shared/ui/card';
 import { useNavigate } from 'react-router';
+import { useAuth } from '@/features/auth/hooks/useAuth';
 
 export default function PaymentSuccessPage() {
   const navigate = useNavigate();
+  const { role } = useAuth();
+
+  const handleGoDashboard = () => {
+    const path = role === 'founder' ? '/dashboard/founder' : '/dashboard/investor';
+    navigate(path);
+  };
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-6 relative overflow-hidden">
@@ -23,7 +30,7 @@ export default function PaymentSuccessPage() {
         </p>
         
         <Button 
-          onClick={() => navigate('/dashboard')}
+          onClick={handleGoDashboard}
           className="w-full bg-[#01F27B] text-black hover:bg-[#01F27B]/90 font-bold py-6 rounded-xl flex items-center justify-center gap-2 group"
         >
           Go to Dashboard

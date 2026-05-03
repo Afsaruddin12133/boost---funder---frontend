@@ -1,16 +1,21 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import {
   CheckCircle, Edit3, Save, X, Camera, MapPin, Users,
   DollarSign, Globe, Linkedin, Twitter, Github, Facebook,
-  Building2, RefreshCw, AlertCircle, User
+  Building2, RefreshCw, AlertCircle, User, Mail, Phone,
+  ChevronRight, ExternalLink
 } from "lucide-react";
-import { Button, Card, Badge, Loader } from "@/shared/ui";
+import { Button } from "@/shared/ui/button";
+import { Card } from "@/shared/ui/card";
+import { Badge } from "@/shared/ui/badge";
+import { Loader } from "@/shared/ui/loader";
 import { getFounderProfile, updateFounderProfile } from "../services/profile.service";
 import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
 import { useAuth } from "@/features/auth/hooks/useAuth";
 
-// ─── Flatten { user: { ..., profile: {...}|null } } → flat object ──────────────
+// ─── Flatten API Response ──────────────────────────────────────────────────
 function flattenProfile(user) {
   if (!user) return null;
   const ext = user.profile || {};
@@ -29,6 +34,7 @@ function flattenProfile(user) {
     fundingGoal:        ext.fundingGoal           ?? "",
     teamSize:           ext.teamSize              ?? "",
     profileImage:       ext.profileImage          || null,
+    website:            ext.website               || "",
     linkedin:           ext.socialLinks?.linkedin  || "",
     twitter:            ext.socialLinks?.twitter   || "",
     github:             ext.socialLinks?.github    || "",
@@ -36,187 +42,65 @@ function flattenProfile(user) {
   };
 }
 
-const COMPLETION_FIELDS = [
-  "firstName","lastName","bio","location","phone",
-  "companyName","companyWebsite","startupStage","startupDescription",
-  "fundingGoal","teamSize","linkedin","twitter",
-];
-function calcCompletion(flat) {
-  if (!flat) return 0;
-  const filled = COMPLETION_FIELDS.filter(
-    (k) => flat[k] !== null && flat[k] !== undefined && String(flat[k]).trim() !== ""
-  );
-  return Math.round((filled.length / COMPLETION_FIELDS.length) * 100);
-}
+const STAGES = ["Idea", "Pre-Seed", "Seed", "MVP", "Early Traction", "Series A", "Series B", "Growth"];
 
-const STAGES = ["Idea","Pre-Seed","Seed","MVP","Early Traction","Series A","Series B","Growth"];
+// ─── Visual Components ──────────────────────────────────────────────────────
+const InputGroup = ({ label, icon: Icon, error, children }) => (
+  <div className="space-y-1.5">
+    <label className="text-[10px] font-black text-white/30 uppercase tracking-[0.2em] ml-1 flex items-center gap-1.5">
+      {Icon && <Icon className="w-3 h-3" />}
+      {label}
+    </label>
+    {children}
+    {error && <p className="text-[10px] text-red-400 font-bold ml-1">{error}</p>}
+  </div>
+);
 
-// ─── Plain text for view mode ──────────────────────────────────────────────────
-function ViewValue({ value, placeholder = "Not set" }) {
-  const v = value !== null && value !== undefined ? String(value).trim() : "";
-  return v
-    ? <p className="text-sm text-white py-2">{v}</p>
-    : <p className="text-sm text-white/25 italic py-2">{placeholder}</p>;
-}
+const PremiumInput = ({ value, onChange, placeholder, type = "text", readOnly = false }) => (
+  <input
+    type={type}
+    value={value ?? ""}
+    onChange={(e) => onChange?.(e.target.value)}
+    placeholder={placeholder}
+    readOnly={readOnly}
+    className={`w-full bg-white/[0.03] border ${readOnly ? 'border-white/5 text-white/30 cursor-not-allowed' : 'border-white/10 text-white focus:border-[#01F27B]/50 focus:bg-[#01F27B]/5'} rounded-2xl px-5 py-3.5 text-sm transition-all duration-300 outline-none placeholder:text-white/20`}
+  />
+);
 
-// ─── Edit mode inputs ──────────────────────────────────────────────────────────
-function EditInput({ value, onChange, placeholder, type = "text", className = "" }) {
-  return (
-    <input type={type} value={value ?? ""} onChange={(e) => onChange?.(e.target.value)}
-      placeholder={placeholder}
-      className={`w-full bg-white/5 border border-[#01F27B]/30 rounded-xl px-4 py-2.5 text-sm text-white
-        placeholder:text-white/25 focus:outline-none focus:border-[#01F27B]/70 transition-all ${className}`}
-    />
-  );
-}
-function EditTextarea({ value, onChange, placeholder, rows = 4, maxLength }) {
-  const len = (value ?? "").length;
-  return (
-    <div className="relative">
-      <textarea value={value ?? ""} onChange={(e) => onChange?.(e.target.value)}
-        placeholder={placeholder} rows={rows} maxLength={maxLength}
-        className="w-full bg-white/5 border border-[#01F27B]/30 rounded-xl px-4 py-3 text-sm text-white
-          placeholder:text-white/25 focus:outline-none focus:border-[#01F27B]/70 transition-all resize-none"
-      />
-      {maxLength && (
-        <span className={`absolute bottom-3 right-3 text-[10px] ${len > maxLength * 0.9 ? "text-amber-400" : "text-white/20"}`}>
-          {len}/{maxLength}
-        </span>
-      )}
-    </div>
-  );
-}
-function EditSelect({ value, onChange, options, placeholder }) {
-  return (
-    <select value={value ?? ""} onChange={(e) => onChange?.(e.target.value)}
-      className="w-full bg-[#0c0c0c] border border-[#01F27B]/30 rounded-xl px-4 py-2.5 text-sm text-white
-        focus:outline-none focus:border-[#01F27B]/70 transition-all
-        [&>option]:bg-[#0c0c0c] [&>option]:text-white">
-      <option value="">{placeholder || "Select…"}</option>
-      {options.map((o) => <option key={o} value={o}>{o}</option>)}
-    </select>
-  );
-}
+const PremiumTextarea = ({ value, onChange, placeholder, rows = 4 }) => (
+  <textarea
+    value={value ?? ""}
+    onChange={(e) => onChange?.(e.target.value)}
+    placeholder={placeholder}
+    rows={rows}
+    className="w-full bg-white/[0.03] border border-white/10 text-white focus:border-[#01F27B]/50 focus:bg-[#01F27B]/5 rounded-2xl px-5 py-4 text-sm transition-all duration-300 outline-none placeholder:text-white/20 resize-none"
+  />
+);
 
-// ─── UI helpers ────────────────────────────────────────────────────────────────
-function Field({ label, children, hint, error }) {
-  return (
-    <div className="space-y-1">
-      <label className="text-[10px] font-semibold text-white/40 uppercase tracking-wider">{label}</label>
-      {children}
-      {hint && !error && <p className="text-xs text-white/25">{hint}</p>}
-      {error && <p className="text-xs text-red-400">{error}</p>}
-    </div>
-  );
-}
-function Section({ icon: Icon, title, children }) {
-  return (
-    <Card className="bg-[#0c0c0c] border-white/10 p-6 space-y-5">
-      <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-        <div className="w-7 h-7 rounded-lg bg-[#01F27B]/10 flex items-center justify-center">
-          <Icon className="w-3.5 h-3.5 text-[#01F27B]" />
-        </div>
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
-      </div>
-      {children}
-    </Card>
-  );
-}
-function SocialRow({ icon: Icon, viewValue, editValue, onChange, placeholder, editing }) {
-  return (
-    <div className="flex items-center gap-3">
-      <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center shrink-0">
-        <Icon className="w-4 h-4 text-white/40" />
-      </div>
-      {editing
-        ? <EditInput value={editValue} onChange={onChange} placeholder={placeholder} className="flex-1" />
-        : <div className="flex-1">
-            {viewValue
-              ? <a href={viewValue} target="_blank" rel="noreferrer" className="text-sm text-[#01F27B] hover:underline truncate block">{viewValue}</a>
-              : <p className="text-sm text-white/25 italic">Not set</p>}
-          </div>}
-    </div>
-  );
-}
-function StatPill({ icon: Icon, label, value }) {
-  return (
-    <div className="flex items-start gap-2">
-      <Icon className="w-4 h-4 text-[#01F27B] shrink-0 mt-0.5" />
-      <div className="min-w-0">
-        <span className="text-[10px] text-white/35 uppercase tracking-wider block">{label}</span>
-        <span className="text-xs text-white/85 font-medium break-words">{value || "—"}</span>
-      </div>
-    </div>
-  );
-}
-function CompletionBar({ percent }) {
-  const color = percent < 40 ? "bg-red-400" : percent < 70 ? "bg-amber-400" : "bg-[#01F27B]";
-  const text  = percent < 40 ? "text-red-400" : percent < 70 ? "text-amber-400" : "text-[#01F27B]";
-  return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between">
-        <span className="text-[10px] text-white/40 uppercase tracking-widest">Profile Completion</span>
-        <span className={`text-xs font-bold ${text}`}>{percent}%</span>
-      </div>
-      <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-        <div className={`h-full rounded-full transition-all duration-700 ${color}`} style={{ width: `${percent}%` }} />
-      </div>
-      {percent < 100 && <p className="text-[10px] text-white/30">Fill in more details to build investor trust</p>}
-    </div>
-  );
-}
-function Skeleton({ className }) { return <div className={`animate-pulse bg-white/5 rounded-xl ${className}`} />; }
-function PageSkeleton() {
-  return (
-    <div className="grid lg:grid-cols-[280px_1fr] gap-6">
-      <Card className="bg-[#0c0c0c] border-white/10 p-6 space-y-4">
-        <Skeleton className="w-24 h-24 rounded-2xl mx-auto" />
-        <Skeleton className="h-5 w-32 mx-auto" /><Skeleton className="h-3 w-20 mx-auto" />
-        <Skeleton className="h-3 w-full" /><Skeleton className="h-3 w-4/5" />
-      </Card>
-      <div className="space-y-4">
-        {[1,2,3].map((i) => (
-          <Card key={i} className="bg-[#0c0c0c] border-white/10 p-6 space-y-4">
-            <Skeleton className="h-4 w-32" />
-            <div className="grid grid-cols-2 gap-4">
-              <Skeleton className="h-10" /><Skeleton className="h-10" />
-              <Skeleton className="h-10" /><Skeleton className="h-10" />
-            </div>
-          </Card>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// ─── Main Page ─────────────────────────────────────────────────────────────────
+// ─── Main Component ──────────────────────────────────────────────────────────
 export default function FounderProfilePage() {
   const { data: verStatus } = useVerificationStatus();
-  const { user: authUser } = useAuth();
+  const { user: authUser, updateUser } = useAuth();
   
-  // Direct fetch — bypasses React Query data pipeline completely
   const [rawUser, setRawUser] = useState(null);
-  const [loading, setLoading]  = useState(true);
+  const [loading, setLoading] = useState(true);
   const [fetchErr, setFetchErr] = useState(null);
-  const [saving, setSaving]    = useState(false);
-
-  const [editing, setEditing]   = useState(false);
-  const [form, setForm]         = useState({});
+  const [saving, setSaving] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({});
   const [avatarPreview, setAvatarPreview] = useState(null);
-  const [avatarFile, setAvatarFile]       = useState(null);
+  const [avatarFile, setAvatarFile] = useState(null);
   const [validationErrors, setValidationErrors] = useState({});
   const fileRef = useRef(null);
 
-  // Fetch on mount
   const fetchProfile = useCallback(async () => {
     setLoading(true);
     setFetchErr(null);
     try {
       const data = await getFounderProfile();
-      console.log("[FounderProfilePage] fetched rawUser:", data);
       setRawUser(data);
+      updateUser(data); // Sync with navigation bar
     } catch (e) {
-      console.error("[FounderProfilePage] fetch error:", e);
       setFetchErr(e?.message || "Failed to load profile.");
     } finally {
       setLoading(false);
@@ -225,270 +109,378 @@ export default function FounderProfilePage() {
 
   useEffect(() => { fetchProfile(); }, [fetchProfile]);
 
-  // Flatten API data
-  const profile   = flattenProfile(rawUser);
-  const isVerified = verStatus?.status === "approved" && authUser?.isVerified !== false;
-  const completion = calcCompletion(profile);
-
-  // VIEW → read directly from `profile` (live data)
-  // EDIT → read from `form` (mutable snapshot)
-  const d = editing ? form : (profile || {});
+  const profile = flattenProfile(rawUser);
+  const statusString = (verStatus?.status || verStatus?.verification?.status || "").toLowerCase();
+  const isVerified = authUser?.isVerified === true || statusString === "approved" || statusString === "verified";
 
   const enterEditMode = () => {
     setForm(profile ? { ...profile } : {});
     setEditing(true);
   };
-  const set = (key) => (val) => {
-    setForm((prev) => ({ ...prev, [key]: val }));
-    setValidationErrors((prev) => ({ ...prev, [key]: undefined }));
-  };
-  const validate = () => {
-    const e = {};
-    if (!form.firstName?.trim()) e.firstName = "Required";
-    if (!form.lastName?.trim())  e.lastName  = "Required";
-    if ((form.bio?.length || 0) > 1000)             e.bio = "Max 1000 chars";
-    if ((form.startupDescription?.length || 0) > 2000) e.startupDescription = "Max 2000 chars";
-    if (form.fundingGoal !== "" && Number(form.fundingGoal) < 0) e.fundingGoal = "Must be ≥ 0";
-    if (form.teamSize    !== "" && Number(form.teamSize)    < 1) e.teamSize    = "Must be ≥ 1";
-    setValidationErrors(e);
-    return Object.keys(e).length === 0;
-  };
+
   const handleCancel = () => {
     setEditing(false);
     setAvatarPreview(null);
     setAvatarFile(null);
     setValidationErrors({});
   };
+
   const handleSave = async () => {
-    if (!validate()) { toast.error("Please fix the errors before saving."); return; }
+    // Basic Validation
+    const e = {};
+    if (!form.firstName?.trim()) e.firstName = "Required";
+    if (!form.lastName?.trim()) e.lastName = "Required";
+    if (Object.keys(e).length > 0) {
+      setValidationErrors(e);
+      toast.error("Please fill in required fields.");
+      return;
+    }
+
     const fd = new FormData();
-    Object.entries(form).forEach(([k, v]) => {
-      if (v !== null && v !== undefined && String(v).trim() !== "") fd.append(k, v);
+    
+    // Core fields
+    const coreFields = [
+      'firstName', 'lastName', 'email', 'phone', 'location', 'bio', 
+      'companyName', 'companyWebsite', 'startupStage', 'startupDescription', 
+      'fundingGoal', 'teamSize', 'website'
+    ];
+
+    coreFields.forEach(key => {
+      if (form[key] !== null && form[key] !== undefined && String(form[key]).trim() !== "") {
+        fd.append(key, form[key]);
+      }
     });
+
+    // Social fields (Nested in backend)
+    const socialFields = ['linkedin', 'twitter', 'facebook', 'github'];
+    socialFields.forEach(key => {
+      if (form[key] !== null && form[key] !== undefined && String(form[key]).trim() !== "") {
+        fd.append(`socialLinks.${key}`, form[key]);
+      }
+    });
+
     if (avatarFile) fd.append("profileImage", avatarFile);
 
     setSaving(true);
     try {
       await updateFounderProfile(fd);
-      toast.success("Profile updated successfully! 🎉");
+      toast.success("Profile updated successfully!");
       setEditing(false);
-      setAvatarPreview(null);
-      setAvatarFile(null);
-      await fetchProfile(); // re-fetch to show latest data
+      await fetchProfile();
     } catch (e) {
-      toast.error(e?.message || "Failed to update profile.");
+      toast.error(e?.message || "Update failed.");
     } finally {
       setSaving(false);
     }
   };
+
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (!file.type.startsWith("image/")) { toast.error("Please upload an image file."); return; }
     setAvatarFile(file);
     setAvatarPreview(URL.createObjectURL(file));
   };
 
-  if (loading) return <Loader fullPage label="Loading profile..." />;
+  if (loading) return <div className="h-[60vh] flex items-center justify-center"><Loader label="Preparing your profile..." /></div>;
+
   if (fetchErr) return (
-    <Card className="bg-[#0c0c0c] border-white/10 p-8 text-center">
-      <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
-      <p className="text-white/70">{fetchErr}</p>
-      <Button onClick={fetchProfile} className="mt-4 bg-white/5 border border-white/10 text-white rounded-xl px-4 h-9 text-sm">
-        <RefreshCw className="w-4 h-4 mr-2" /> Retry
+    <Card className="bg-white/5 border-white/10 p-12 text-center max-w-lg mx-auto mt-20">
+      <AlertCircle className="w-12 h-12 text-red-400 mx-auto mb-4" />
+      <h3 className="text-xl font-bold text-white mb-2">Something went wrong</h3>
+      <p className="text-white/40 mb-6">{fetchErr}</p>
+      <Button onClick={fetchProfile} className="bg-[#01F27B] text-black font-bold rounded-xl px-8">
+        <RefreshCw className="w-4 h-4 mr-2" /> Try Again
       </Button>
     </Card>
   );
 
-  const displayName = `${d.firstName || ""} ${d.lastName || ""}`.trim() || "Unnamed Founder";
-  const avatarSrc   = avatarPreview || d.profileImage;
+  const d = editing ? form : (profile || {});
+  const avatarSrc = avatarPreview || d.profileImage;
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">My Profile</h1>
-          <p className="text-white/40 text-sm mt-1">Manage how investors see you</p>
-        </div>
-        {!editing ? (
-          <Button onClick={enterEditMode}
-            className="bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-xl h-10 px-5 flex items-center gap-2">
-            <Edit3 className="w-4 h-4" /> Edit Profile
-          </Button>
-        ) : (
-          <div className="flex items-center gap-3">
-            <Button onClick={handleCancel} variant="ghost" disabled={saving}
-              className="text-white/50 hover:text-white h-10 px-5 rounded-xl">
-              <X className="w-4 h-4 mr-1.5" /> Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={saving}
-              className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black font-semibold h-10 px-6 rounded-xl
-                shadow-[0_0_20px_rgba(1,242,123,0.2)] flex items-center gap-2 disabled:opacity-50">
-              {saving ? <><Loader size="sm" className="mr-2" /> Saving…</>
-                      : <><Save className="w-4 h-4" /> Save Changes</>}
-            </Button>
-          </div>
-        )}
-      </div>
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-6xl mx-auto space-y-8 pb-20"
+    >
+      {/* ── HEADER CARD ───────────────────────────────────────────────── */}
+      <Card className="relative bg-gradient-to-br from-white/[0.05] to-transparent border-white/10 overflow-hidden p-8 lg:p-12">
+        {/* Background Decorative Elements */}
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#01F27B]/5 rounded-full blur-[120px] -mr-64 -mt-64 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#01F27B]/5 rounded-full blur-[80px] -ml-32 -mb-32 pointer-events-none" />
 
-      <div className="grid lg:grid-cols-[280px_1fr] gap-6 items-start">
-
-        {/* ── SIDEBAR ───────────────────────────────────────────────── */}
-        <div className="space-y-4 lg:sticky lg:top-6">
-          <Card className="bg-[#0c0c0c] border-white/10 p-6 text-center">
-            {/* Avatar */}
-            <div className="relative w-24 h-24 mx-auto mb-4">
-              <div className="w-24 h-24 rounded-2xl bg-[#01F27B]/10 border border-white/10 overflow-hidden flex items-center justify-center">
-                {avatarSrc
-                  ? <img src={avatarSrc} alt={displayName} className="w-full h-full object-cover" />
-                  : <User className="w-10 h-10 text-[#01F27B]/60" />}
-              </div>
-              {editing && (
-                <>
-                  <button onClick={() => fileRef.current?.click()}
-                    className="absolute inset-0 rounded-2xl bg-black/60 flex items-center justify-center opacity-0 hover:opacity-100 transition-all">
-                    <Camera className="w-5 h-5 text-white" />
-                  </button>
-                  <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
-                </>
-              )}
-              {isVerified && (
-                <div className="absolute -bottom-1.5 -right-1.5 w-7 h-7 bg-[#01F27B] rounded-full border-2 border-[#0c0c0c] flex items-center justify-center shadow-[0_0_12px_rgba(1,242,123,0.6)]">
-                  <CheckCircle className="w-3.5 h-3.5 text-black" />
+        <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-8 lg:gap-12">
+          {/* Avatar Section */}
+          <div className="relative shrink-0">
+            <div className={`w-32 h-32 lg:w-40 lg:h-40 rounded-3xl overflow-hidden border-4 ${isVerified ? 'border-[#01F27B]/30' : 'border-white/10'} bg-black shadow-2xl relative group`}>
+              {avatarSrc ? (
+                <img src={avatarSrc} alt="Profile" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-white/5">
+                  <User className="w-16 h-16 text-[#01F27B]/40" />
                 </div>
               )}
-            </div>
-
-            <div className="flex items-center justify-center gap-2 flex-wrap mb-1">
-              <h2 className="text-lg font-bold text-white">{displayName}</h2>
-              {isVerified && (
-                <Badge className="bg-[#01F27B] text-black border-0 rounded-full text-[9px] font-bold px-2 py-0.5 flex items-center gap-1">
-                  <CheckCircle className="w-2.5 h-2.5" /> Verified
-                </Badge>
+              
+              {editing && (
+                <button 
+                  onClick={() => fileRef.current?.click()}
+                  className="absolute inset-0 bg-black/60 backdrop-blur-sm flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
+                >
+                  <Camera className="w-8 h-8 text-[#01F27B] mb-2" />
+                  <span className="text-[10px] font-black text-[#01F27B] uppercase tracking-widest">Change Photo</span>
+                </button>
               )}
             </div>
-            <p className="text-xs text-white/40 mb-2">{d.email || "—"}</p>
-            {d.startupStage && (
-              <Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20 rounded-full text-[10px] mb-4">
-                {d.startupStage}
-              </Badge>
-            )}
-            {d.bio && (
-              <p className="text-xs text-white/55 leading-relaxed text-center mb-4 px-1">
-                {d.bio.slice(0, 120)}{d.bio.length > 120 ? "…" : ""}
+            
+            <AnimatePresence>
+              {isVerified && (
+                <motion.div 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="absolute -bottom-3 -right-3 w-10 h-10 bg-[#01F27B] rounded-2xl border-4 border-black flex items-center justify-center shadow-[0_0_20px_rgba(1,242,123,0.4)] z-20"
+                >
+                  <CheckCircle className="w-5 h-5 text-black" strokeWidth={3} />
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+          </div>
+
+          {/* Identity Section */}
+          <div className="flex-1 text-center md:text-left space-y-4">
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-3">
+                <h1 className="text-3xl lg:text-5xl font-black text-white tracking-tighter uppercase italic">
+                  {d.firstName || "New"} <span className="text-[#01F27B]">{d.lastName || "Founder"}</span>
+                </h1>
+                {isVerified && (
+                  <Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20 py-1.5 px-4 rounded-full font-black tracking-widest text-[10px] uppercase">
+                    Elite Verified
+                  </Badge>
+                )}
+              </div>
+              <p className="text-white/40 font-bold tracking-wide flex items-center justify-center md:justify-start gap-2">
+                <Mail className="w-4 h-4 text-[#01F27B]/50" />
+                {d.email}
               </p>
-            )}
-            <div className="space-y-3 text-left border-t border-white/5 pt-4">
-              <StatPill icon={MapPin}     label="Location"     value={d.location} />
-              <StatPill icon={Users}      label="Team Size"    value={d.teamSize ? `${d.teamSize} members` : null} />
-              <StatPill icon={DollarSign} label="Funding Goal"
-                value={d.fundingGoal ? `$${Number(d.fundingGoal).toLocaleString()}` : null} />
-              <StatPill icon={Building2}  label="Company"      value={d.companyName} />
             </div>
-            <div className="mt-5 border-t border-white/5 pt-5">
-              <CompletionBar percent={completion} />
+
+            <p className="text-white/60 text-base lg:text-lg leading-relaxed max-w-2xl font-medium">
+              {d.bio || "Crafting the next big thing in the startup ecosystem. Complete your bio to share your vision with elite investors."}
+            </p>
+
+            <div className="flex flex-wrap items-center justify-center md:justify-start gap-4 pt-2">
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                <MapPin className="w-4 h-4 text-[#01F27B]" />
+                <span className="text-sm font-bold text-white/80">{d.location || "Global"}</span>
+              </div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
+                <Building2 className="w-4 h-4 text-[#01F27B]" />
+                <span className="text-sm font-bold text-white/80">{d.companyName || "Stealth Startup"}</span>
+              </div>
             </div>
-          </Card>
-        </div>
+          </div>
 
-        {/* ── MAIN CONTENT ─────────────────────────────────────────── */}
-        <div className="space-y-4">
-
-          {/* Section 1: Personal Info */}
-          <Section icon={User} title="Personal Information">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label="First Name" error={validationErrors.firstName}>
-                {editing ? <EditInput value={form.firstName} onChange={set("firstName")} placeholder="John" />
-                         : <ViewValue value={d.firstName} />}
-              </Field>
-              <Field label="Last Name" error={validationErrors.lastName}>
-                {editing ? <EditInput value={form.lastName} onChange={set("lastName")} placeholder="Smith" />
-                         : <ViewValue value={d.lastName} />}
-              </Field>
-              <Field label="Email">
-                <ViewValue value={d.email} />
-              </Field>
-              <Field label="Phone">
-                {editing ? <EditInput value={form.phone} onChange={set("phone")} placeholder="+1 234 567 8900" />
-                         : <ViewValue value={d.phone} />}
-              </Field>
-              <Field label="Location">
-                {editing ? <EditInput value={form.location} onChange={set("location")} placeholder="City, Country" />
-                         : <ViewValue value={d.location} />}
-              </Field>
-            </div>
-            <Field label="Bio" hint="Brief summary shown on your public profile" error={validationErrors.bio}>
-              {editing
-                ? <EditTextarea value={form.bio} onChange={set("bio")} placeholder="Tell investors about yourself…" rows={4} maxLength={1000} />
-                : <ViewValue value={d.bio} />}
-            </Field>
-          </Section>
-
-          {/* Section 2: Social Links */}
-          <Section icon={Globe} title="Social Links">
-            <div className="space-y-3">
-              <SocialRow icon={Linkedin} viewValue={d.linkedin}  editValue={form.linkedin}  onChange={set("linkedin")}  placeholder="https://linkedin.com/in/yourname" editing={editing} />
-              <SocialRow icon={Twitter}  viewValue={d.twitter}   editValue={form.twitter}   onChange={set("twitter")}   placeholder="https://twitter.com/yourhandle"  editing={editing} />
-              <SocialRow icon={Github}   viewValue={d.github}    editValue={form.github}    onChange={set("github")}    placeholder="https://github.com/yourhandle"   editing={editing} />
-              <SocialRow icon={Facebook} viewValue={d.facebook}  editValue={form.facebook}  onChange={set("facebook")}  placeholder="https://facebook.com/yourpage"   editing={editing} />
-            </div>
-          </Section>
-
-          {/* Section 3: Company & Startup */}
-          <Section icon={Building2} title="Company & Startup">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label="Company Name">
-                {editing ? <EditInput value={form.companyName} onChange={set("companyName")} placeholder="OrbitAnalytics Inc." />
-                         : <ViewValue value={d.companyName} />}
-              </Field>
-              <Field label="Company Website">
-                {editing ? <EditInput value={form.companyWebsite} onChange={set("companyWebsite")} placeholder="https://yourcompany.com" />
-                         : d.companyWebsite
-                           ? <a href={d.companyWebsite} target="_blank" rel="noreferrer" className="text-sm text-[#01F27B] hover:underline py-2 block">{d.companyWebsite}</a>
-                           : <ViewValue value={null} />}
-              </Field>
-              <Field label="Startup Stage">
-                {editing
-                  ? <EditSelect value={form.startupStage} onChange={set("startupStage")} options={STAGES} placeholder="Select stage" />
-                  : d.startupStage
-                    ? <div className="py-2"><Badge className="bg-[#01F27B]/10 text-[#01F27B] border-[#01F27B]/20 rounded-full">{d.startupStage}</Badge></div>
-                    : <ViewValue value={null} />}
-              </Field>
-            </div>
-            <Field label="Startup Description" hint="Max 2000 characters" error={validationErrors.startupDescription}>
-              {editing
-                ? <EditTextarea value={form.startupDescription} onChange={set("startupDescription")} placeholder="Describe your startup…" rows={5} maxLength={2000} />
-                : <ViewValue value={d.startupDescription} />}
-            </Field>
-          </Section>
-
-          {/* Section 4: Funding & Team */}
-          <Section icon={DollarSign} title="Funding & Team">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <Field label="Funding Goal (USD)" hint="Total amount you aim to raise" error={validationErrors.fundingGoal}>
-                {editing
-                  ? <EditInput value={form.fundingGoal} onChange={set("fundingGoal")} placeholder="500000" type="number" />
-                  : <ViewValue value={d.fundingGoal ? `$${Number(d.fundingGoal).toLocaleString()}` : null} />}
-              </Field>
-              <Field label="Team Size" hint="Full-time members" error={validationErrors.teamSize}>
-                {editing
-                  ? <EditInput value={form.teamSize} onChange={set("teamSize")} placeholder="5" type="number" />
-                  : <ViewValue value={d.teamSize ? `${d.teamSize} members` : null} />}
-              </Field>
-            </div>
-          </Section>
-
-          {!editing && (
-            <div className="lg:hidden">
-              <Button onClick={enterEditMode}
-                className="w-full bg-[#01F27B] hover:bg-[#01F27B]/90 text-black font-semibold h-12 rounded-xl">
-                <Edit3 className="w-4 h-4 mr-2" /> Edit Profile
+          {/* Action Buttons */}
+          <div className="flex-none pt-4 md:pt-0">
+            {!editing ? (
+              <Button 
+                onClick={enterEditMode}
+                className="bg-[#01F27B] hover:bg-[#00d66d] text-black font-black px-8 h-12 rounded-2xl flex items-center gap-2 shadow-[0_10px_25px_rgba(1,242,123,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+              >
+                <Edit3 className="w-5 h-5" />
+                <span>Edit Profile</span>
               </Button>
-            </div>
-          )}
+            ) : (
+              <div className="flex flex-col gap-3">
+                <Button 
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="bg-[#01F27B] hover:bg-[#00d66d] text-black font-black px-10 h-12 rounded-2xl flex items-center gap-2 shadow-[0_10px_25px_rgba(1,242,123,0.3)]"
+                >
+                  {saving ? <Loader size="sm" className="border-black" /> : <Save className="w-5 h-5" />}
+                  <span>{saving ? "Saving..." : "Save Profile"}</span>
+                </Button>
+                <Button 
+                  onClick={handleCancel}
+                  variant="ghost"
+                  className="text-white/40 hover:text-white hover:bg-white/5 h-12 rounded-2xl font-bold uppercase tracking-widest text-[10px]"
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </div>
         </div>
+      </Card>
+
+      {/* ── DETAILS GRID ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        {/* Left Column: Stats & Social */}
+        <div className="lg:col-span-4 space-y-8">
+          <Section icon={TrendingUp} title="Quick Stats">
+            <div className="grid grid-cols-1 gap-4">
+              <StatCard icon={Users} label="Team Size" value={d.teamSize ? `${d.teamSize} Experts` : "Solo Founder"} />
+              <StatCard icon={DollarSign} label="Funding Goal" value={d.fundingGoal ? `$${Number(d.fundingGoal).toLocaleString()}` : "Not Disclosed"} />
+              <StatCard icon={Rocket} label="Startup Stage" value={d.startupStage || "Exploration"} />
+            </div>
+          </Section>
+
+          <Section icon={Globe} title="Digital Presence">
+            <div className="space-y-4">
+              <SocialItem icon={Globe} label="Professional Website" value={d.website} editing={editing} onChange={(v) => setForm(f => ({...f, website: v}))} />
+              <SocialItem icon={Linkedin} label="LinkedIn" value={d.linkedin} editing={editing} onChange={(v) => setForm(f => ({...f, linkedin: v}))} />
+              <SocialItem icon={Twitter} label="Twitter / X" value={d.twitter} editing={editing} onChange={(v) => setForm(f => ({...f, twitter: v}))} />
+              <SocialItem icon={Github} label="GitHub" value={d.github} editing={editing} onChange={(v) => setForm(f => ({...f, github: v}))} />
+              <SocialItem icon={Facebook} label="Facebook" value={d.facebook} editing={editing} onChange={(v) => setForm(f => ({...f, facebook: v}))} />
+            </div>
+          </Section>
+        </div>
+
+        {/* Right Column: Information Forms */}
+        <div className="lg:col-span-8 space-y-8">
+          <Section icon={User} title="Core Information">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputGroup label="First Name" icon={User} error={validationErrors.firstName}>
+                {editing ? <PremiumInput value={form.firstName} onChange={(v) => setForm(f => ({...f, firstName: v}))} placeholder="Rabiul" /> 
+                         : <ViewBox value={d.firstName} />}
+              </InputGroup>
+              <InputGroup label="Last Name" icon={User} error={validationErrors.lastName}>
+                {editing ? <PremiumInput value={form.lastName} onChange={(v) => setForm(f => ({...f, lastName: v}))} placeholder="Islam" />
+                         : <ViewBox value={d.lastName} />}
+              </InputGroup>
+              <InputGroup label="Email Address" icon={Mail}>
+                <PremiumInput value={d.email} readOnly />
+              </InputGroup>
+              <InputGroup label="Phone Number" icon={Phone}>
+                {editing ? <PremiumInput value={form.phone} onChange={(v) => setForm(f => ({...f, phone: v}))} placeholder="+1 234 567 890" />
+                         : <ViewBox value={d.phone} />}
+              </InputGroup>
+              <div className="md:col-span-2">
+                <InputGroup label="Professional Bio" icon={Edit3}>
+                  {editing ? <PremiumTextarea value={form.bio} onChange={(v) => setForm(f => ({...f, bio: v}))} placeholder="Tell us your story..." />
+                           : <ViewBox value={d.bio} long />}
+                </InputGroup>
+              </div>
+            </div>
+          </Section>
+
+          <Section icon={Building2} title="Venture Details">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <InputGroup label="Startup Name" icon={Building2}>
+                {editing ? <PremiumInput value={form.companyName} onChange={(v) => setForm(f => ({...f, companyName: v}))} placeholder="My Venture" />
+                         : <ViewBox value={d.companyName} />}
+              </InputGroup>
+              <InputGroup label="Venture Website" icon={Globe}>
+                {editing ? <PremiumInput value={form.companyWebsite} onChange={(v) => setForm(f => ({...f, companyWebsite: v}))} placeholder="https://venture.com" />
+                         : <ViewBox value={d.companyWebsite} isLink />}
+              </InputGroup>
+              <InputGroup label="Startup Stage" icon={Rocket}>
+                {editing ? (
+                  <select 
+                    value={form.startupStage || ""} 
+                    onChange={(e) => setForm(f => ({...f, startupStage: e.target.value}))}
+                    className="w-full bg-white/[0.03] border border-white/10 text-white focus:border-[#01F27B]/50 focus:bg-[#01F27B]/5 rounded-2xl px-5 py-3.5 text-sm outline-none transition-all"
+                  >
+                    <option value="" className="bg-black">Select Stage</option>
+                    {STAGES.map(s => <option key={s} value={s} className="bg-black">{s}</option>)}
+                  </select>
+                ) : <ViewBox value={d.startupStage} />}
+              </InputGroup>
+              <InputGroup label="Location" icon={MapPin}>
+                {editing ? <PremiumInput value={form.location} onChange={(v) => setForm(f => ({...f, location: v}))} placeholder="New York, NY" />
+                         : <ViewBox value={d.location} />}
+              </InputGroup>
+              <div className="md:col-span-2">
+                <InputGroup label="Startup Mission" icon={ShieldCheck}>
+                  {editing ? <PremiumTextarea value={form.startupDescription} onChange={(v) => setForm(f => ({...f, startupDescription: v}))} placeholder="What problem are you solving?" />
+                           : <ViewBox value={d.startupDescription} long />}
+                </InputGroup>
+              </div>
+            </div>
+          </Section>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Sub-Components ─────────────────────────────────────────────────────────
+
+function Section({ icon: Icon, title, children }) {
+  return (
+    <Card className="bg-white/[0.03] backdrop-blur-xl border-white/10 p-6 lg:p-8 space-y-6">
+      <div className="flex items-center gap-3 pb-4 border-b border-white/5">
+        <div className="w-10 h-10 rounded-xl bg-[#01F27B]/10 flex items-center justify-center">
+          <Icon className="w-5 h-5 text-[#01F27B]" />
+        </div>
+        <h3 className="text-lg font-bold text-white tracking-tight uppercase">{title}</h3>
+      </div>
+      {children}
+    </Card>
+  );
+}
+
+function StatCard({ icon: Icon, label, value }) {
+  return (
+    <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 group hover:border-[#01F27B]/30 transition-all duration-300">
+      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center group-hover:bg-[#01F27B]/10 transition-colors">
+        <Icon className="w-6 h-6 text-white/30 group-hover:text-[#01F27B]" />
+      </div>
+      <div>
+        <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">{label}</p>
+        <p className="text-base font-bold text-white tracking-tight">{value}</p>
       </div>
     </div>
   );
 }
+
+function SocialItem({ icon: Icon, label, value, editing, onChange }) {
+  return (
+    <div className="flex items-center gap-4">
+      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center shrink-0">
+        <Icon className="w-5 h-5 text-white/30" />
+      </div>
+      {editing ? (
+        <PremiumInput value={value} onChange={onChange} placeholder={`https://${label.toLowerCase()}.com/...`} />
+      ) : (
+        <div className="flex-1 min-w-0">
+          <p className="text-[9px] font-black text-white/20 uppercase tracking-widest">{label}</p>
+          {value ? (
+            <a href={value} target="_blank" rel="noreferrer" className="text-sm font-bold text-[#01F27B] hover:underline truncate block flex items-center gap-1.5 group">
+              {value}
+              <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+            </a>
+          ) : (
+            <p className="text-sm font-medium text-white/20 italic">Not connected</p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ViewBox({ value, long = false, isLink = false }) {
+  const content = value?.trim();
+  if (!content) return <p className="text-sm font-medium text-white/20 italic p-3.5 bg-white/[0.02] rounded-2xl border border-dashed border-white/5">Not provided</p>;
+  
+  return (
+    <div className={`p-4 bg-white/[0.02] rounded-2xl border border-white/5 transition-all hover:bg-white/[0.04]`}>
+      {isLink ? (
+        <a href={content} target="_blank" rel="noreferrer" className="text-sm font-bold text-[#01F27B] hover:underline flex items-center gap-2">
+          {content}
+          <ExternalLink className="w-3 h-3" />
+        </a>
+      ) : (
+        <p className={`text-sm text-white/80 leading-relaxed ${long ? 'whitespace-pre-wrap' : 'truncate'}`}>
+          {content}
+        </p>
+      )}
+    </div>
+  );
+}
+
+const TrendingUp = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>;
+const ShieldCheck = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path><path d="m9 12 2 2 4-4"></path></svg>;
+const Rocket = ({ className }) => <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-5c1.62-2.2 5-3 5-3"></path><path d="M12 15v5s3.03-.55 5-2c2.2-1.62 3-5 3-5"></path></svg>;
