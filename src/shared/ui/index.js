@@ -23,6 +23,7 @@ export { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage, F
 export { HoverCard, HoverCardTrigger, HoverCardContent } from "./hover-card";
 export { InputOTP, InputOTPGroup, InputOTPSlot, InputOTPSeparator } from "./input-otp";
 export { Input } from "./input";
+export { Loader } from "./loader";
 export { Label } from "./label";
 export { Menubar, MenubarMenu, MenubarTrigger, MenubarContent, MenubarItem, MenubarSeparator, MenubarLabel, MenubarCheckboxItem, MenubarRadioGroup, MenubarRadioItem, MenubarPortal, MenubarSubContent, MenubarSubTrigger, MenubarGroup, MenubarSub, MenubarShortcut } from "./menubar";
 export { NavigationMenu, NavigationMenuList, NavigationMenuItem, NavigationMenuContent, NavigationMenuTrigger, NavigationMenuLink, NavigationMenuIndicator, NavigationMenuViewport } from "./navigation-menu";

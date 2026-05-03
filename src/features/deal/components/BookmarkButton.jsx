@@ -1,6 +1,6 @@
 import React from "react";
-import { Bookmark, Loader2 } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/shared/ui/tooltip";
+import { Bookmark } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, Loader } from "@/shared/ui";
 
 export default function BookmarkButton({ isSaved, isLoading, onClick }) {
   return (
@@ -21,7 +21,7 @@ export default function BookmarkButton({ isSaved, isLoading, onClick }) {
             aria-label={isSaved ? "Unsave deal" : "Save deal"}
           >
             {isLoading ? (
-              <Loader2 className="w-4 h-4 text-white/50 animate-spin" />
+              <Loader size="sm" />
             ) : (
               <Bookmark 
                 className={`w-4 h-4 transition-all duration-300

@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import ExploreDealCard from "./ExploreDealCard";
 import { resolveDealList } from "../utils/dealUtils";
 import api from "@/lib/api";
-import { Loader2, AlertCircle, Compass } from "lucide-react";
+import { AlertCircle, Compass } from "lucide-react";
 import { Button } from "@/shared/ui/button";
+import { Loader } from "@/shared/ui";
 
 export default function ExploreDealsList() {
   const [deals, setDeals] = useState([]);
@@ -127,7 +128,7 @@ export default function ExploreDealsList() {
             onClick={loadMore}
             disabled={loading}
           >
-            {loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+            {loading ? <Loader size="sm" className="mr-2" /> : null}
             Load More Deals
           </Button>
         </div>

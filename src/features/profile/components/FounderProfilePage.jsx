@@ -5,9 +5,7 @@ import {
   DollarSign, Globe, Linkedin, Twitter, Github, Facebook,
   Building2, RefreshCw, AlertCircle, User
 } from "lucide-react";
-import { Button } from "@/shared/ui/button";
-import { Card } from "@/shared/ui/card";
-import { Badge } from "@/shared/ui/badge";
+import { Button, Card, Badge, Loader } from "@/shared/ui";
 import { getFounderProfile, updateFounderProfile } from "../services/profile.service";
 import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
 import { useAuth } from "@/features/auth/hooks/useAuth";
@@ -291,7 +289,7 @@ export default function FounderProfilePage() {
     setAvatarPreview(URL.createObjectURL(file));
   };
 
-  if (loading) return <PageSkeleton />;
+  if (loading) return <Loader fullPage label="Loading profile..." />;
   if (fetchErr) return (
     <Card className="bg-[#0c0c0c] border-white/10 p-8 text-center">
       <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
@@ -327,7 +325,7 @@ export default function FounderProfilePage() {
             <Button onClick={handleSave} disabled={saving}
               className="bg-[#01F27B] hover:bg-[#01F27B]/90 text-black font-semibold h-10 px-6 rounded-xl
                 shadow-[0_0_20px_rgba(1,242,123,0.2)] flex items-center gap-2 disabled:opacity-50">
-              {saving ? <><RefreshCw className="w-4 h-4 animate-spin" /> Saving…</>
+              {saving ? <><Loader size="sm" className="mr-2" /> Saving…</>
                       : <><Save className="w-4 h-4" /> Save Changes</>}
             </Button>
           </div>

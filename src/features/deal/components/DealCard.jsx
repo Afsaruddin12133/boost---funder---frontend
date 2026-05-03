@@ -1,6 +1,5 @@
 import { ImageWithFallback } from "@/shared/components/ImageWithFallback";
-import { Badge } from "@/shared/ui/badge";
-import { Button } from "@/shared/ui/button";
+import { Badge, Button, Loader } from "@/shared/ui";
 import { Card } from "@/shared/ui/card";
 import { 
   Building2, 
@@ -21,7 +20,16 @@ import {
     getStatusMeta,
 } from "../utils/dealUtils";
 
-export default function DealCard({ deal, onNavigate, onRequestDelete, onEdit, onView, onSubmitForReview, hideActions = false }) {
+export default function DealCard({ 
+  deal, 
+  onNavigate, 
+  onRequestDelete, 
+  onEdit, 
+  onView, 
+  onSubmitForReview, 
+  hideActions = false,
+  isSubmitting = false
+}) {
   const media = getDealMedia(deal);
   const imageSrc = media[0] || PLACEHOLDER_MEDIA;
   const name = getDealName(deal);
@@ -175,9 +183,15 @@ export default function DealCard({ deal, onNavigate, onRequestDelete, onEdit, on
                   onClick={(e) => { e.stopPropagation(); onSubmitForReview?.(deal); }}
                 >
                   <div className="w-11 h-11 rounded-2xl bg-[#01F27B] flex items-center justify-center shadow-[0_0_20px_rgba(1,242,123,0.4)] transition-all group-hover/btn:shadow-[0_0_30px_rgba(1,242,123,0.6)]">
-                    <ShieldCheck className="w-5 h-5 text-black" />
+                    {isSubmitting ? (
+                      <Loader size="sm" className="text-black" />
+                    ) : (
+                      <ShieldCheck className="w-5 h-5 text-black" />
+                    )}
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-tighter text-[#01F27B]">Admin Review</span>
+                  <span className="text-[9px] font-black uppercase tracking-tighter text-[#01F27B]">
+                    {isSubmitting ? "Submitting..." : "Admin Review"}
+                  </span>
                 </button>
               )}
 

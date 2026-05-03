@@ -4,9 +4,7 @@ import {
   ShieldCheck, ShieldX, Clock, Upload, CheckCircle,
   AlertTriangle, RefreshCw, X, Lock, FileText, ChevronRight
 } from "lucide-react";
-import { Button } from "@/shared/ui/button";
-import { Card } from "@/shared/ui/card";
-import { Badge } from "@/shared/ui/badge";
+import { Button, Card, Badge, Loader } from "@/shared/ui";
 import {
   useVerificationStatus,
   useSubmitVerification,
@@ -197,14 +195,7 @@ export default function FounderVerificationPage() {
 
   // ─── Loading ──────────────────────────────────────────────────────────────
   if (statusLoading) {
-    return (
-      <div className="flex items-center justify-center py-24">
-        <div className="flex items-center gap-3 text-white/50">
-          <RefreshCw className="w-5 h-5 animate-spin" />
-          <span>Loading verification status…</span>
-        </div>
-      </div>
-    );
+    return <Loader label="Loading verification status..." />;
   }
 
   const meta = STATUS_META[status];
@@ -365,7 +356,7 @@ export default function FounderVerificationPage() {
             >
               {submitMutation.isPending ? (
                 <span className="flex items-center gap-2">
-                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  <Loader size="sm" />
                   Submitting…
                 </span>
               ) : (

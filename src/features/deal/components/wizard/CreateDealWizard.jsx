@@ -1,6 +1,5 @@
-import { Button } from '@/shared/ui/button';
-import { Card } from '@/shared/ui/card';
-import { ArrowLeft, ArrowRight, Loader2, Save } from 'lucide-react';
+import { Button, Card, Loader } from '@/shared/ui';
+import { ArrowLeft, ArrowRight, Save } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -337,7 +336,7 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
             >
               {isSaving ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader size="sm" className="mr-2" />
                   Saving...
                 </>
               ) : currentStep === 5 ? (

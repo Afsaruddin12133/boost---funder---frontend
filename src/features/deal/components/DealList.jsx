@@ -13,6 +13,7 @@ import { Card } from "@/shared/ui/card";
 import { useState } from "react";
 import { Plus, Rocket, FilePlus, RefreshCw } from "lucide-react";
 import toast from "react-hot-toast";
+import { Loader } from "@/shared/ui";
 import { useDeleteDeal, useMyDeals, useSubmitDeal } from "../hooks";
 import DealCard from "./DealCard";
 import DealTable from "./DealTable";
@@ -63,7 +64,7 @@ export default function DealList({ onNavigate, onEdit, onView, onCreate, compact
   };
 
   if (isLoading) {
-    return <div className="p-6 text-sm text-white/60">Loading deals...</div>;
+    return <Loader label="Loading deals..." />;
   }
 
   if (isError) {
@@ -144,6 +145,7 @@ export default function DealList({ onNavigate, onEdit, onView, onCreate, compact
               onView={onView}
               onSubmitForReview={handleSubmitForReview}
               hideActions={compact}
+              isSubmitting={submitDeal.isPending && submitDeal.variables === (deal.id ?? deal._id)}
             />
           </div>
         ))}
@@ -239,7 +241,7 @@ export default function DealList({ onNavigate, onEdit, onView, onCreate, compact
               onClick={handleConfirmDelete}
               disabled={deleteDeal.isPending}
             >
-              {deleteDeal.isPending ? "Deleting..." : "Delete"}
+              {deleteDeal.isPending ? <Loader size="sm" className="mr-2" /> : "Delete"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Card } from '@/shared/ui/card';
-import { Button } from '@/shared/ui/button';
-import { X, Plus, Loader2 } from 'lucide-react';
+import { Card, Button, Loader } from '@/shared/ui';
+import { X, Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function ProfileForm({ initialData, onSave, onCancel, isSaving }) {
@@ -277,7 +276,7 @@ export default function ProfileForm({ initialData, onSave, onCancel, isSaving })
           disabled={isSaving}
           className="bg-[#01F27B] text-black hover:bg-[#01F27B]/90 font-semibold min-w-[120px]"
         >
-          {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
+          {isSaving ? <Loader size="sm" className="mr-2" /> : null}
           {isSaving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>

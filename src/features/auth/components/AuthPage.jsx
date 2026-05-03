@@ -8,7 +8,8 @@ import {
 } from "@/shared/ui/dialog";
 import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
-import { ArrowLeft, Eye, EyeOff, Loader2, Lock, Mail, Rocket, User } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, Lock, Mail, Rocket, User } from "lucide-react";
+import { Loader } from "@/shared/ui";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
@@ -321,7 +322,7 @@ export default function AuthPage({ onBack }) {
                 >
                   {loading ? (
                     <span className="flex items-center justify-center gap-2">
-                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <Loader size="sm" />
                       {isLogin ? "Signing in…" : "Creating account…"}
                     </span>
                   ) : (

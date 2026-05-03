@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Loader2, Edit3, MapPin } from 'lucide-react';
-import { Button } from '@/shared/ui/button';
+import { Edit3, MapPin } from 'lucide-react';
+import { Button, Loader } from '@/shared/ui';
 import toast from 'react-hot-toast';
 import api from '@/lib/api';
 import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
@@ -122,14 +122,7 @@ export default function InvestorProfilePage() {
     setPreviewUrl(null);
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-[#01F27B] animate-spin mb-4" />
-        <p className="text-white/60">Loading profile...</p>
-      </div>
-    );
-  }
+    return <Loader fullPage label="Loading profile..." />;
 
   return (
     <div className="max-w-7xl mx-auto pb-12">

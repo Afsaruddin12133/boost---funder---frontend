@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import PricingCard from "./PricingCard";
 import api from "@/lib/api";
-import { Loader2, AlertCircle } from "lucide-react";
-import { Button } from "@/shared/ui/button";
+import { AlertCircle } from "lucide-react";
+import { Loader, Button, Card } from "@/shared/ui";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { Card } from "@/shared/ui/card";
 
 const FALLBACK_PLANS = [
   {
@@ -126,12 +125,7 @@ export default function SubscriptionPage() {
   const expiresAt = userSub?.expiresAt || userSub?.endDate;
 
   if (loading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 text-[#01F27B] animate-spin mb-4" />
-        <p className="text-white/60">Loading pricing plans...</p>
-      </div>
-    );
+    return <Loader label="Loading pricing plans..." />;
   }
 
   if (error) {
@@ -192,7 +186,7 @@ export default function SubscriptionPage() {
         {/* Loading overlay for upgrade action */}
         {upgrading && (
           <div className="absolute inset-0 z-50 bg-[#0c0c0c]/50 backdrop-blur-sm rounded-3xl flex items-center justify-center">
-            <Loader2 className="w-10 h-10 text-[#01F27B] animate-spin" />
+            <Loader size="lg" label="Preparing checkout..." />
           </div>
         )}
 

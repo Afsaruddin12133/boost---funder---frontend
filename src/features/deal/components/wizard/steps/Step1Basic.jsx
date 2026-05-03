@@ -1,5 +1,6 @@
 import { Input } from "@/shared/ui/input";
 import { Briefcase, Globe, Layers, MapPin, Phone, Rocket, Tag } from 'lucide-react';
+import { cn } from "@/shared/ui/utils";
 import Field from '../ui/Field';
 import FileUploader from '../ui/FileUploader';
 import {
@@ -106,13 +107,38 @@ export default function Step1Basic({ data, onChange, errors }) {
           />
         </Field>
 
-        <Field label="Tagline" icon={Tag} error={errors.tagline}>
-          <Input
-            placeholder="Describe your mission in one powerful sentence"
-            value={data.tagline || ""}
-            onChange={(e) => onChange("tagline", e.target.value)}
-            className="bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all"
-          />
+        <Field 
+          label="Tagline" 
+          icon={Tag} 
+          error={errors.tagline}
+          description={
+            <div className="flex justify-between items-center mt-1">
+              <span className="text-[10px] text-white/30 uppercase tracking-widest">A powerful one-sentence pitch</span>
+              <span className={cn(
+                "text-[10px] font-bold tracking-widest",
+                (data.tagline?.length > 60) ? "text-red-500" : "text-white/30"
+              )}>
+                {data.tagline?.length || 0}/60
+              </span>
+            </div>
+          }
+        >
+          <div className="space-y-2">
+            <Input
+              placeholder="Describe your mission in one powerful sentence"
+              value={data.tagline || ""}
+              onChange={(e) => onChange("tagline", e.target.value)}
+              className={cn(
+                "bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 lg:h-12 rounded-xl transition-all",
+                (data.tagline?.length > 60) && "border-red-500/50 focus:border-red-500"
+              )}
+            />
+            {data.tagline?.length > 60 && (
+              <p className="text-[10px] font-bold text-red-500 uppercase tracking-widest animate-in fade-in slide-in-from-top-1">
+                Warning: Tagline exceeds 60 characters. Investors prefer brevity.
+              </p>
+            )}
+          </div>
         </Field>
       </div>
 
