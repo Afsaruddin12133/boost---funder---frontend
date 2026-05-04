@@ -27,7 +27,9 @@ import {
    Target,
    TrendingUp,
    Users,
-   Zap
+   Zap,
+   MessageSquare,
+   Phone
 } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router";
@@ -56,7 +58,7 @@ function DashCard({ title, subtitle, icon: Icon, children, className, locked, on
             {subtitle && <p className="text-[10px] text-[#01F27B] font-black uppercase tracking-widest opacity-60">{subtitle}</p>}
           </div>
         </div>
-        {locked && <Lock className="w-4 h-4 text-white/20" />}
+        {locked && <Lock className="w-4 h-4 text-amber-500" />}
       </div>
 
       <div className={cn("flex-1", locked && "blur-md select-none opacity-40")}>
@@ -64,9 +66,12 @@ function DashCard({ title, subtitle, icon: Icon, children, className, locked, on
       </div>
 
       {locked && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm p-6 text-center">
-          <Button onClick={onUpgrade} size="sm" className="bg-[#01F27B] text-black font-black text-[10px] rounded-lg h-8 px-4">
-            Unlock {title}
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md p-6 text-center group cursor-pointer" onClick={onUpgrade}>
+          <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(245,158,11,0.2)] group-hover:scale-110 transition-transform">
+             <Lock className="text-amber-500 w-6 h-6" />
+          </div>
+          <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] rounded-lg h-8 px-4">
+            Upgrade to Unlock
           </Button>
         </div>
       )}
@@ -74,16 +79,25 @@ function DashCard({ title, subtitle, icon: Icon, children, className, locked, on
   );
 }
 
-function MiniStat({ label, value, icon: Icon, sub, locked }) {
+function MiniStat({ label, value, icon: Icon, sub, locked, onUpgrade }) {
   if (!hasValue(value) && !locked) return null;
   return (
-    <div className="bg-white/5 border border-white/5 rounded-xl p-3 flex items-center gap-3 group hover:border-[#01F27B]/30 transition-all">
-      <div className="w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center text-white/30 group-hover:text-[#01F27B] transition-colors">
-        <Icon className="w-4 h-4" />
+    <div 
+      onClick={locked ? onUpgrade : undefined}
+      className={cn(
+        "bg-white/5 border border-white/5 rounded-xl p-3 flex items-center gap-3 group transition-all",
+        locked ? "cursor-pointer hover:border-amber-500/50 hover:bg-amber-500/5" : "hover:border-[#01F27B]/30"
+      )}
+    >
+      <div className={cn(
+        "w-8 h-8 rounded-lg bg-black/40 flex items-center justify-center transition-colors",
+        locked ? "text-amber-500/40 group-hover:text-amber-500" : "text-white/30 group-hover:text-[#01F27B]"
+      )}>
+        {locked ? <Lock className="w-3.5 h-3.5" /> : <Icon className="w-4 h-4" />}
       </div>
       <div className="min-w-0">
         <p className="text-[9px] font-black uppercase tracking-tighter text-white/20 line-clamp-1">{label}</p>
-        <p className={cn("text-sm font-black text-white truncate", locked && "blur-sm")}>
+        <p className={cn("text-sm font-black text-white truncate", locked && "blur-sm select-none")}>
           {locked ? "••••" : value}
         </p>
       </div>
@@ -141,6 +155,7 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
   const location = basicInfo.location || activeDeal.location || "Global";
   const website = basicInfo.startupWebsite || activeDeal.startupWebsite;
   const logo = basicInfo.startupLogo || activeDeal.startupLogo;
+  const whatsappNumber = activeDeal.whatsappNumber || basicInfo.whatsappNumber;
   const topCompetitor = activeDeal.topCompetitor || story?.topCompetitor;
 
   const raised = funding.raisedAmount ?? activeDeal.raisedAmount ?? 0;
@@ -149,7 +164,7 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
   const statusMeta = getStatusMeta(activeDeal.status);
   const isVerified = activeDeal.verificationBadge?.isVerified || activeDeal.isVerified;
 
-  const handleUpgrade = () => navigate("/subscription");
+  const handleUpgrade = () => navigate("/dashboard/investor/subscription");
   const handleBack = onBack || (() => navigate(-1));
 
   const handleSubmitForReview = () => {
@@ -267,12 +282,12 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
         <div className="lg:col-span-4 space-y-8 h-fit">
           <DashCard title="Traction Intelligence" icon={TrendingUp} subtitle="Live Performance" className="p-8 h-fit">
              <div className="grid grid-cols-2 gap-4">
-                <MiniStat label="Revenue" value={execution.revenue ? formatCurrency(execution.revenue) : "N/A"} icon={TrendingUp} locked={lockedPremium} />
-                <MiniStat label="Users" value={funding.users} icon={Users} locked={lockedPremium} />
-                <MiniStat label="Growth" value={funding.growthRate ? `${funding.growthRate}%` : "N/A"} icon={Zap} locked={lockedPremium} />
-                <MiniStat label="CAC" value={funding.CAC} icon={Target} locked={lockedPremium} />
-                <MiniStat label="LTV" value={funding.LTV} icon={Layers} locked={lockedPremium} />
-                <MiniStat label="Churn" value={funding.CHURN ? `${funding.CHURN}%` : "N/A"} icon={RefreshCw} locked={lockedPremium} />
+                <MiniStat label="Revenue" value={execution.revenue ? formatCurrency(execution.revenue) : "N/A"} icon={TrendingUp} locked={lockedPremium} onUpgrade={handleUpgrade} />
+                <MiniStat label="Users" value={funding.users} icon={Users} locked={lockedPremium} onUpgrade={handleUpgrade} />
+                <MiniStat label="Growth" value={funding.growthRate ? `${funding.growthRate}%` : "N/A"} icon={Zap} locked={lockedPremium} onUpgrade={handleUpgrade} />
+                <MiniStat label="CAC" value={funding.CAC} icon={Target} locked={lockedPremium} onUpgrade={handleUpgrade} />
+                <MiniStat label="LTV" value={funding.LTV} icon={Layers} locked={lockedPremium} onUpgrade={handleUpgrade} />
+                <MiniStat label="Churn" value={funding.CHURN ? `${funding.CHURN}%` : "N/A"} icon={RefreshCw} locked={lockedPremium} onUpgrade={handleUpgrade} />
              </div>
              <div className="mt-8 p-6 rounded-3xl bg-black/40 border border-white/5 shadow-inner">
                 <div className="flex justify-between items-center mb-6">
@@ -453,8 +468,51 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
              </p>
            </div>
            <div className="flex flex-col sm:flex-row gap-4 shrink-0 relative z-10">
-              <Button className="bg-white/5 hover:bg-white/10 text-white rounded-2xl px-10 h-14 border border-white/10 font-bold transition-all">Message Founders</Button>
-              <Button className="bg-[#01F27B] hover:bg-[#00d66d] text-black font-black rounded-2xl px-12 h-14 shadow-lg shadow-[#01F27B]/20 transition-all">Participate in Round</Button>
+              {lockedPremium ? (
+                <Button 
+                  onClick={handleUpgrade}
+                  className="bg-white/5 hover:bg-white/10 text-white rounded-2xl px-10 h-14 border border-white/10 font-bold transition-all flex items-center gap-3 group"
+                >
+                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)] group-hover:bg-amber-500/20 transition-all">
+                    <Lock className="w-4 h-4 text-amber-500" />
+                  </div>
+                  Message Founders
+                </Button>
+              ) : (
+                <div className="flex items-center gap-2 bg-white/5 border border-white/10 p-1.5 rounded-[1.2rem] shadow-inner">
+                  <Button 
+                    onClick={() => {
+                      if (whatsappNumber) {
+                        const cleanNumber = whatsappNumber.replace(/\D/g, '');
+                        window.open(`https://wa.me/${cleanNumber}`, '_blank');
+                      } else {
+                        toast.error("No WhatsApp contact provided for this founder.");
+                      }
+                    }}
+                    className="bg-[#25D366] hover:bg-[#1ebd5e] text-white rounded-[0.9rem] px-6 h-11 font-black transition-all flex items-center gap-2 shadow-lg shadow-[#25D366]/20 hover:scale-[1.02] active:scale-95"
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                    </svg>
+                    WhatsApp
+                  </Button>
+                  <div className="w-px h-6 bg-white/10 mx-1" />
+                  <Button 
+                    variant="ghost"
+                    onClick={() => {
+                      if (whatsappNumber) {
+                        window.location.href = `tel:${whatsappNumber.replace(/\D/g, '')}`;
+                      } else {
+                        toast.error("No phone number provided for this founder.");
+                      }
+                    }}
+                    className="text-white/60 hover:text-white hover:bg-white/5 rounded-[0.9rem] px-4 h-11 font-bold flex items-center gap-2 group/call"
+                  >
+                    <Phone className="w-4 h-4 text-[#01F27B] group-hover/call:scale-110 transition-transform" />
+                    Call
+                  </Button>
+                </div>
+              )}
            </div>
         </div>
       )}

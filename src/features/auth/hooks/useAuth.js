@@ -2,7 +2,7 @@ import { auth, facebookProvider, googleProvider } from "@/lib/firebase";
 import { signInWithPopup } from "firebase/auth";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import { facebookLogin, googleLogin, loginUser, registerUser } from "../services/auth.service";
+import { facebookLogin, googleLogin, loginUser, registerUser, forgotPassword as forgotPasswordService, resetPassword as resetPasswordService } from "../services/auth.service";
 import { AUTH_STORAGE_KEY, ROLES, USER_STORAGE_KEY } from "../types/auth.types";
 
 // ─── localStorage helpers ────────────────────────────────────────────────────
@@ -165,6 +165,35 @@ export function useAuth() {
     }
   }, [_persist, navigate]);
 
+  // ── Password Recovery ───────────────────────────────────────────────────
+  const sendPasswordResetOTP = useCallback(async (email) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await forgotPasswordService(email);
+      return res;
+    } catch (err) {
+      setError(err.message || "Failed to send OTP.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  const confirmPasswordReset = useCallback(async ({ email, otp, newPassword }) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await resetPasswordService({ email, otp, newPassword });
+      return res;
+    } catch (err) {
+      setError(err.message || "Password reset failed.");
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   // ── Logout ──────────────────────────────────────────────────────────────
   const logout = useCallback(() => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
@@ -195,6 +224,8 @@ export function useAuth() {
     register,
     loginWithGoogle,
     loginWithFacebook,
+    sendPasswordResetOTP,
+    confirmPasswordReset,
     logout,
     updateUser,
     clearError,

@@ -6,6 +6,7 @@ import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { ArrowRight, ArrowUpRight, CheckCircle, Rocket, Zap } from "lucide-react";
 import { useEffect } from "react";
+import Logo from "@/shared/components/Logo";
 export default function LandingPage({ onNavigate }) {
   
   const { isAuthenticated, role } = useAuth();
@@ -50,13 +51,8 @@ export default function LandingPage({ onNavigate }) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
 
         {/* Logo */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 bg-[#01F27B] rounded-xl flex items-center justify-center shadow-[0_0_12px_rgba(1,242,123,0.4)]">
-            <Rocket className="w-5 h-5 text-black" />
-          </div>
-          <span className="text-lg sm:text-xl font-semibold tracking-tight">
-            BoostFundr
-          </span>
+        <div className="flex items-center">
+          <Logo size="md" className="cursor-pointer" />
         </div>
 
         {/* Navigation */}
@@ -494,9 +490,6 @@ export default function LandingPage({ onNavigate }) {
       </div>
     </section>
 
-    {
-      /* Footer */
-    }
     <SiteFooter
       onNavigate={onNavigate}
       onScrollTo={handleScrollTo}

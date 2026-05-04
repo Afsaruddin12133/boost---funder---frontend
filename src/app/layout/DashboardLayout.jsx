@@ -48,6 +48,8 @@ import {
   SidebarTrigger,
   useSidebar
 } from "@/shared/ui/sidebar";
+import Logo from "@/shared/components/Logo";
+import SiteFooter from "@/shared/components/SiteFooter";
 
 function SidebarNavContent({ navItems, currentPath, navigateRouter, onLogout, userRole }) {
   const { setOpenMobile } = useSidebar();
@@ -212,18 +214,12 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
         {/* Subtle background glow for sidebar */}
         <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-[#01F27B]/5 rounded-full blur-[100px] pointer-events-none" />
         
-        <SidebarHeader className="p-6 pt-8">
-          <div className="flex items-center gap-2 px-2">
-            <div className="w-8 h-8 bg-[#01F27B] rounded-lg flex items-center justify-center">
-              <span className="text-black font-bold text-lg leading-none">B</span>
-            </div>
-            <div className="flex flex-col">
-              <span className="text-xl font-bold text-white leading-none">BoostFundr</span>
-              <span className="text-xs text-[#01F27B] font-medium mt-1">
-                {userRole === "founder" ? "Founder Portal" : "Investor Portal"}
-              </span>
-            </div>
-          </div>
+        <SidebarHeader className="p-6 pt-8 flex flex-col items-center gap-2">
+          <Logo size="lg" className="w-full" />
+          <div className="w-full h-px bg-white/5 my-2" />
+          <span className="text-[10px] text-[#01F27B] font-black uppercase tracking-[0.3em] opacity-70">
+            {userRole === "founder" ? "Founder Portal" : "Investor Portal"}
+          </span>
         </SidebarHeader>
 
         <SidebarNavContent 
@@ -319,8 +315,11 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
 
         {/* Main Content Area - Independently Scrollable */}
         <main className="flex-1 overflow-y-auto p-4 md:p-5 custom-scrollbar">
-          <div className="max-w-[1600px] mx-auto">
-            {children}
+          <div className="max-w-[1600px] mx-auto min-h-full flex flex-col">
+            <div className="flex-1">
+              {children}
+            </div>
+            <SiteFooter onNavigate={onNavigate} />
           </div>
         </main>
       </SidebarInset>

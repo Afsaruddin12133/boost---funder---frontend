@@ -4,6 +4,7 @@ import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
 import { Card } from "@/shared/ui/card";
 import { Badge } from "@/shared/ui/badge";
+import SiteFooter from "@/shared/components/SiteFooter";
 const MOCK_DEALS = [
   {
     id: 1,
@@ -264,6 +265,10 @@ export default function DealFeed({ onNavigate, userRole, onLogout }) {
                 </div>
                 </div>
               </Card>)}
+              
+              <div className="mt-20 border-t border-white/5 pt-10">
+                <SiteFooter onNavigate={onNavigate} />
+              </div>
           </div>
         </div>
       </div>

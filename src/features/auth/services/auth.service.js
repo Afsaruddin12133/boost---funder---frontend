@@ -36,11 +36,29 @@ export async function facebookLogin(token, role) {
   return api.post("/api/v1/auth/facebook-login", { token, role });
 }
 
+/**
+ * Send password reset OTP.
+ * @param {string} email 
+ */
+export async function forgotPassword(email) {
+  return api.post("/api/v1/auth/forgot-password", { email });
+}
+
+/**
+ * Reset password using OTP.
+ * @param {{ email: string, otp: string, newPassword: string }} payload 
+ */
+export async function resetPassword(payload) {
+  return api.post("/api/v1/auth/reset-password", payload);
+}
+
 /** @deprecated Use named exports instead. */
 export const authService = {
   loginUser,
   registerUser,
   googleLogin,
   facebookLogin,
+  forgotPassword,
+  resetPassword,
   getProfile: () => api.get("/api/v1/auth/me"),
 };

@@ -11,7 +11,12 @@ import PaymentSuccessPage from "@/features/payment/components/PaymentSuccessPage
 import PaymentCancelPage from "@/features/payment/components/PaymentCancelPage";
 import { Navigate, Route, Routes, useNavigate, useParams } from "react-router";
 import DashboardLayout from "./layout/DashboardLayout";
+import PublicLayout from "./layout/PublicLayout";
 import SettingsPage from "@/features/dashboard/components/SettingsPage";
+import AboutPage from "@/features/landing/components/legal/AboutPage";
+import PrivacyPage from "@/features/landing/components/legal/PrivacyPage";
+import TermsPage from "@/features/landing/components/legal/TermsPage";
+import DisclaimerPage from "@/features/landing/components/legal/DisclaimerPage";
 
 // ─── Protected route wrapper ──────────────────────────────────────────────────
 
@@ -60,6 +65,10 @@ export default function App() {
       "investor-dashboard": "/dashboard/investor",
       "founder-dashboard": "/dashboard/founder",
       subscription: "/subscription",
+      about: "/about",
+      privacy: "/privacy",
+      terms: "/terms",
+      disclaimer: "/disclaimer",
     };
 
     if (page === "deal-detail" && dealId !== undefined) {
@@ -88,15 +97,21 @@ export default function App() {
           {/* Public routes */}
           <Route path="/" element={<LandingPage onNavigate={navigate} />} />
           <Route path="/login" element={
-            isAuthenticated
+            isAuthenticated 
               ? <Navigate to={role === 'founder' ? '/dashboard/founder' : '/dashboard/investor'} replace />
-              : <AuthPage onBack={() => window.history.back()} />
+              : <AuthPage onBack={() => window.history.back()} onNavigate={navigate} />
           } />
-          <Route path="/deals" element={<DealFeed {...sharedProps} />} />
-          <Route path="/deals/:id" element={<DealDetailWrapper onNavigate={navigate} />} />
-          <Route path="/subscription" element={<SubscriptionPage {...sharedProps} />} />
+          <Route path="/deals" element={<PublicLayout onNavigate={navigate}><DealFeed {...sharedProps} /></PublicLayout>} />
+          <Route path="/deals/:id" element={<PublicLayout onNavigate={navigate}><DealDetailWrapper onNavigate={navigate} /></PublicLayout>} />
+          <Route path="/subscription" element={<PublicLayout onNavigate={navigate}><SubscriptionPage {...sharedProps} /></PublicLayout>} />
           <Route path="/payment/success" element={<PaymentSuccessPage />} />
           <Route path="/payment/cancel" element={<PaymentCancelPage />} />
+          
+          {/* Legal and Info Routes */}
+          <Route path="/about" element={<PublicLayout onNavigate={navigate}><AboutPage onNavigate={navigate} /></PublicLayout>} />
+          <Route path="/privacy" element={<PublicLayout onNavigate={navigate}><PrivacyPage onNavigate={navigate} /></PublicLayout>} />
+          <Route path="/terms" element={<PublicLayout onNavigate={navigate}><TermsPage onNavigate={navigate} /></PublicLayout>} />
+          <Route path="/disclaimer" element={<PublicLayout onNavigate={navigate}><DisclaimerPage onNavigate={navigate} /></PublicLayout>} />
 
           {/* Protected routes */}
           <Route path="/dashboard/investor/*" element={
