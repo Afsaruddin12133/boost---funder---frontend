@@ -120,6 +120,7 @@ export default function SubscriptionPage() {
       };
       console.log("[PaymentRequest] Sending body:", requestBody);
       const response = await api.post('/api/v1/payments/create', requestBody);
+      console.log("[PaymentResponse] Received response:", response);
       
       const paymentUrl = response?.data?.paymentUrl || response?.paymentUrl || response?.data?.data?.paymentUrl;
       
