@@ -1,5 +1,4 @@
 import { 
-  Rocket, 
   Mail, 
   Phone, 
   MessageCircle, 
@@ -176,23 +175,11 @@ const SiteFooter = ({
         {/* Bottom Bar: Copyright & Payments */}
         <div className="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row items-center justify-between gap-8">
           
-          {/* Copyright & Dev Link */}
+          {/* Copyright */}
           <div className="flex flex-col gap-2 text-center md:text-left">
             <p className="text-xs text-white/30">
               © {year} {brand}. All rights reserved. Registered FinTech platform.
             </p>
-            <div className="flex items-center gap-2 text-xs text-white/40 justify-center md:justify-start">
-              <span>Engineered with excellence by</span>
-              <a 
-                href="https://www.linkedin.com/in/full-stack-developer-in-dhaka" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-[#01F27B] font-black hover:underline underline-offset-4 decoration-2 transition-all flex items-center gap-1 group"
-              >
-                Creative Developer
-                <Rocket size={10} className="group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
-              </a>
-            </div>
           </div>
 
           {/* Payments & Security */}
