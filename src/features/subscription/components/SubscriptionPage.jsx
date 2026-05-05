@@ -6,6 +6,7 @@ import { Loader, Button, Card } from "@/shared/ui";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import PaymentMethodModal from "./PaymentMethodModal";
 
 const FALLBACK_PLANS = [
   {
@@ -57,6 +58,9 @@ export default function SubscriptionPage() {
   const [upgrading, setUpgrading] = useState(false);
   const [error, setError] = useState(null);
   
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [pendingPlanName, setPendingPlanName] = useState(null);
+
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
   const isGuest = !isAuthenticated;
@@ -94,15 +98,29 @@ export default function SubscriptionPage() {
     // eslint-disable-next-line
   }, [isGuest]);
 
-  const handleUpgrade = async (planName) => {
+  const handleUpgrade = (planName) => {
+    console.log("[Subscription] handleUpgrade called for:", planName);
     if (isGuest) {
       navigate('/login');
       return;
     }
+    const normalizedName = planName.toLowerCase();
+    setPendingPlanName(normalizedName);
+    setIsPaymentModalOpen(true);
+  };
 
+  const handlePaymentMethodSelect = async (paymentMethodId) => {
+    setIsPaymentModalOpen(false);
+    
     try {
       setUpgrading(true);
-      const response = await api.post('/api/v1/payments/create', { planName: planName.toLowerCase() });
+      const requestBody = { 
+        planName: pendingPlanName,
+        paymentMethodId: paymentMethodId
+      };
+      console.log("[PaymentRequest] Sending body:", requestBody);
+      const response = await api.post('/api/v1/payments/create', requestBody);
+      
       const paymentUrl = response?.data?.paymentUrl || response?.paymentUrl || response?.data?.data?.paymentUrl;
       
       if (paymentUrl) {
@@ -111,6 +129,7 @@ export default function SubscriptionPage() {
         throw new Error("No payment URL received");
       }
     } catch (err) {
+      console.error("[PaymentError] Error creating session:", err);
       toast.error(err.message || "Failed to initialize payment. Please try again.");
       setUpgrading(false);
     }
@@ -209,6 +228,13 @@ export default function SubscriptionPage() {
           />
         ))}
       </div>
+
+      <PaymentMethodModal 
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        onSelect={handlePaymentMethodSelect}
+        planName={pendingPlanName}
+      />
 
       {/* Trust Footer */}
       <div className="text-center space-y-4 pt-12 border-t border-white/5">
