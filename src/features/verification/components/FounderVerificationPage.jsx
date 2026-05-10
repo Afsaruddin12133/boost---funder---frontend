@@ -227,11 +227,6 @@ export default function FounderVerificationPage() {
   const { user } = useAuth();
   const submitMutation = useSubmitVerification();
 
-  useEffect(() => {
-    console.log("DEBUG VerificationPage: Status API Response:", statusData);
-    console.log("DEBUG VerificationPage: User Data:", user);
-  }, [statusData, user]);
-
   const [step, setStep] = useState(0);
   const [selectedType, setSelectedType] = useState("");
   const [files, setFiles] = useState({});

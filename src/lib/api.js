@@ -14,7 +14,9 @@ async function handleResponse(response) {
     } catch {
       // response body wasn't JSON – use default message
     }
-    throw new Error(errorMsg);
+    const error = new Error(errorMsg);
+    error.status = response.status;
+    throw error;
   }
   // 204 No Content — return null instead of trying to parse JSON
   if (response.status === 204) return null;

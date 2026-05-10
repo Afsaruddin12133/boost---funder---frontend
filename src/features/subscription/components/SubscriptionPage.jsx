@@ -99,7 +99,6 @@ export default function SubscriptionPage() {
   }, [isGuest]);
 
   const handleUpgrade = (planName) => {
-    console.log("[Subscription] handleUpgrade called for:", planName);
     if (isGuest) {
       navigate('/login');
       return;
@@ -118,9 +117,7 @@ export default function SubscriptionPage() {
         planName: pendingPlanName,
         paymentMethodId: paymentMethodId
       };
-      console.log("[PaymentRequest] Sending body:", requestBody);
       const response = await api.post('/api/v1/payments/create', requestBody);
-      console.log("[PaymentResponse] Received response:", response);
       
       const paymentUrl = response?.data?.paymentUrl || response?.paymentUrl || response?.data?.data?.paymentUrl;
       

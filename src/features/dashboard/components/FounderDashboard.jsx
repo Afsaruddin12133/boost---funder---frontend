@@ -21,7 +21,8 @@ import {
   Zap
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes, useSearchParams } from "react-router";
+import toast from "react-hot-toast";
+import { Navigate, Route, Routes, useLocation, useSearchParams } from "react-router";
 import {
   Bar,
   BarChart,
@@ -42,18 +43,27 @@ const analyticsData = [
   { name: "SUN", views: 190, peak: 200 },
 ];
 
-function OverviewCards({ verStatus, user, onNavigate }) {
-  const { data: deals = [] } = useMyDeals();
-  const statusString = (
-    (typeof verStatus === 'string' ? verStatus : verStatus?.status) || 
+// Helper to normalize verification status and compute common flags
+function getVerificationStatusString(verStatus) {
+  return (
+    (typeof verStatus === 'string' ? verStatus : verStatus?.status) ||
     verStatus?.verification?.status ||
     (typeof verStatus?.data === 'string' ? verStatus?.data : verStatus?.data?.status) ||
     ""
   ).toLowerCase();
+}
 
-  const isVerified = user?.isVerified === true || statusString === "approved" || statusString === "verified" || statusString === "success";
+function computeVerificationFlags(verStatus, user) {
+  const statusString = getVerificationStatusString(verStatus);
   const isRecentlySubmitted = user?.id && localStorage.getItem(`verification_submitted_${user.id}`) === "true";
   const isPending = statusString === "pending" || (isRecentlySubmitted && !statusString);
+  const isVerified = user?.isVerified === true || statusString === "approved" || statusString === "verified" || statusString === "success";
+  return { statusString, isRecentlySubmitted, isPending, isVerified };
+}
+
+function OverviewCards({ verStatus, user, onNavigate }) {
+  const { data: deals = [] } = useMyDeals();
+  const { statusString, isRecentlySubmitted, isPending, isVerified } = computeVerificationFlags(verStatus, user);
   
   // Clean up flag if real status is found
   useEffect(() => {
@@ -116,17 +126,7 @@ function OverviewCards({ verStatus, user, onNavigate }) {
 
 function ProfileSection({ user, onNavigate }) {
   const { data: verStatus } = useVerificationStatus();
-  
-  const statusString = (
-    (typeof verStatus === 'string' ? verStatus : verStatus?.status) || 
-    verStatus?.verification?.status ||
-    (typeof verStatus?.data === 'string' ? verStatus?.data : verStatus?.data?.status) ||
-    ""
-  ).toLowerCase();
-
-  const isRecentlySubmitted = user?.id && localStorage.getItem(`verification_submitted_${user.id}`) === "true";
-  const isPending = statusString === "pending" || (isRecentlySubmitted && !statusString);
-  const isVerified = user?.isVerified === true || statusString === "approved" || statusString === "verified" || statusString === "success";
+  const { statusString, isRecentlySubmitted, isPending, isVerified } = computeVerificationFlags(verStatus, user);
   
   const displayName = user?.profile?.companyName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || "My Startup";
   const category = user?.profile?.startupStage || "Founder";
@@ -238,16 +238,8 @@ function AnalyticsSection() {
 }
 
 function VerificationSection({ verStatus, user, onNavigate }) {
-  const isRecentlySubmitted = user?.id && localStorage.getItem(`verification_submitted_${user.id}`) === "true";
-  
-  const statusString = (
-    (typeof verStatus === 'string' ? verStatus : verStatus?.status) || 
-    verStatus?.verification?.status ||
-    (typeof verStatus?.data === 'string' ? verStatus?.data : verStatus?.data?.status) ||
-    ""
-  ).toLowerCase();
-
-  const isApproved = user?.isVerified === true || statusString === "approved" || statusString === "verified" || statusString === "success";
+  const { statusString, isRecentlySubmitted, isPending, isVerified } = computeVerificationFlags(verStatus, user);
+  const isApproved = isVerified;
   const status = isApproved ? "approved" : (statusString || (isRecentlySubmitted ? "pending" : "unverified"));
   
   return (
@@ -419,16 +411,10 @@ function MyDealsPage({
   editingDeal, 
   setEditingDeal, 
   showCreate, 
-  setShowCreate 
+  setShowCreate,
+  isVerified
 }) {
   const [searchParams, setSearchParams] = useSearchParams();
-
-  // Auto-trigger creation form if action=create is in URL
-  useEffect(() => {
-    if (searchParams.get('action') === 'create') {
-      setShowCreate(true);
-    }
-  }, [searchParams]);
 
   const closeForm = () => {
     setShowCreate(false);
@@ -477,7 +463,13 @@ function MyDealsPage({
         <div className="relative group">
           <div className="absolute inset-0 bg-[#01F27B] blur-[20px] rounded-xl opacity-20 group-hover:opacity-40 animate-pulse transition-opacity" />
           <Button
-            onClick={() => setShowCreate(true)}
+            onClick={() => {
+              if (isVerified) {
+                setShowCreate(true);
+              } else {
+                toast.error("Security Alert: You must be verified to create a deal.");
+              }
+            }}
             className="relative bg-[#01F27B] hover:bg-[#00d66d] text-black font-black rounded-xl px-8 h-11 lg:h-12 shadow-[0_0_25px_rgba(1,242,123,0.4)] hover:shadow-[0_0_35px_rgba(1,242,123,0.6)] transition-all flex items-center gap-2 border border-[#01F27B]/50"
           >
             <Plus className="w-5 h-5" />
@@ -491,7 +483,13 @@ function MyDealsPage({
         onNavigate={onNavigate} 
         onEdit={setEditingDeal} 
         onView={setViewingDeal} 
-        onCreate={() => setShowCreate(true)}
+        onCreate={() => {
+          if (isVerified) {
+            setShowCreate(true);
+          } else {
+            toast.error("Security Alert: You must be verified to create a deal.");
+          }
+        }}
       />
     </div>
   );
@@ -500,14 +498,52 @@ function MyDealsPage({
 export default function FounderDashboard({ onNavigate }) {
   const { user } = useAuth();
   const { data: verStatus } = useVerificationStatus();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
 
-  useEffect(() => {
-    console.log("DEBUG Dashboard: User Data:", user);
-    console.log("DEBUG Dashboard: Verification Status API Response:", verStatus);
-  }, [user, verStatus]);
   const [showCreate, setShowCreate] = useState(false);
   const [editingDeal, setEditingDeal] = useState(null);
   const [viewingDeal, setViewingDeal] = useState(null);
+
+  const statusString = (
+    (typeof verStatus === 'string' ? verStatus : verStatus?.status) || 
+    verStatus?.verification?.status ||
+    (typeof verStatus?.data === 'string' ? verStatus?.data : verStatus?.data?.status) ||
+    ""
+  ).toLowerCase();
+
+  const isVerified = user?.isVerified === true || statusString === "approved" || statusString === "verified" || statusString === "success";
+
+  const handleCreateDeal = () => {
+    if (isVerified) {
+      setShowCreate(true);
+    } else {
+      toast.error("Security Alert: You must be verified to create a deal.");
+    }
+  };
+
+  // Auto-trigger creation form if action=create is in URL
+  useEffect(() => {
+    if (searchParams.get('action') === 'create') {
+      if (isVerified) {
+        setShowCreate(true);
+      } else {
+        toast.error("Security Alert: You must be verified to create a deal.");
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('action');
+        setSearchParams(newParams);
+      }
+    }
+  }, [searchParams, isVerified, setSearchParams]);
+
+  // Close forms and deal views when navigating to a different sidebar tab
+  useEffect(() => {
+    if (searchParams.get('action') !== 'create') {
+      setShowCreate(false);
+      setEditingDeal(null);
+      setViewingDeal(null);
+    }
+  }, [location.pathname, searchParams]);
 
   if (viewingDeal) {
     return (
@@ -523,6 +559,11 @@ export default function FounderDashboard({ onNavigate }) {
     const closeForm = () => {
       setShowCreate(false);
       setEditingDeal(null);
+      if (searchParams.has('action')) {
+        const newParams = new URLSearchParams(searchParams);
+        newParams.delete('action');
+        setSearchParams(newParams);
+      }
     };
 
     return (
@@ -536,7 +577,7 @@ export default function FounderDashboard({ onNavigate }) {
 
   return (
     <Routes>
-      <Route path="/" element={<MainDashboard verStatus={verStatus} user={user} onNavigate={onNavigate} onView={setViewingDeal} onCreate={() => setShowCreate(true)} />} />
+      <Route path="/" element={<MainDashboard verStatus={verStatus} user={user} onNavigate={onNavigate} onView={setViewingDeal} onCreate={handleCreateDeal} />} />
       <Route path="profile" element={<FounderProfilePage />} />
 
       <Route path="deals" element={
@@ -548,6 +589,7 @@ export default function FounderDashboard({ onNavigate }) {
           setEditingDeal={setEditingDeal}
           showCreate={showCreate}
           setShowCreate={setShowCreate}
+          isVerified={isVerified}
         />
       } />
       <Route path="analytics" element={

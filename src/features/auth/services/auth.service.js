@@ -52,13 +52,14 @@ export async function resetPassword(payload) {
   return api.post("/api/v1/auth/reset-password", payload);
 }
 
-/** @deprecated Use named exports instead. */
-export const authService = {
-  loginUser,
-  registerUser,
-  googleLogin,
-  facebookLogin,
-  forgotPassword,
-  resetPassword,
-  getProfile: () => api.get("/api/v1/auth/me"),
-};
+/**
+ * Get user profile based on role.
+ * @param {string} role 
+ */
+export async function getProfile(role) {
+  if (role === 'investor') return api.get("/api/v1/users/me/investor-profile");
+  if (role === 'founder') return api.get("/api/v1/users/me/founder-profile");
+  return Promise.reject(new Error("Role not supported for profile fetching"));
+}
+
+// Deprecated aggregated export removed. Use named exports above instead.

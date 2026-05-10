@@ -1,30 +1,49 @@
 import { AuthPage } from "@/features/auth";
 import { useAuth } from "@/features/auth/hooks/useAuth";
+import { ROLES } from "@/features/auth/types/auth.types";
 import { FounderDashboard, InvestorDashboard } from "@/features/dashboard";
-import { DealDetailPage, DealFeed, ExploreDealsList } from "@/features/deal";
-import { LandingPage } from "@/features/landing";
-import { SubscriptionPage } from "@/features/subscription";
-import InvestorVerificationPage from "@/features/verification/components/InvestorVerificationPage";
-import InvestorProfilePage from "@/features/profile/components/InvestorProfilePage";
-import SavedDealsPage from "@/features/deal/components/SavedDealsPage";
-import PaymentSuccessPage from "@/features/payment/components/PaymentSuccessPage";
-import PaymentCancelPage from "@/features/payment/components/PaymentCancelPage";
-import { Navigate, Route, Routes, useNavigate, useParams } from "react-router";
-import DashboardLayout from "./layout/DashboardLayout";
-import PublicLayout from "./layout/PublicLayout";
 import SettingsPage from "@/features/dashboard/components/SettingsPage";
+import { DealDetailPage, ExploreDealsList } from "@/features/deal";
+import SavedDealsPage from "@/features/deal/components/SavedDealsPage";
+import { LandingPage } from "@/features/landing";
 import AboutPage from "@/features/landing/components/legal/AboutPage";
+import DisclaimerPage from "@/features/landing/components/legal/DisclaimerPage";
 import PrivacyPage from "@/features/landing/components/legal/PrivacyPage";
 import TermsPage from "@/features/landing/components/legal/TermsPage";
-import DisclaimerPage from "@/features/landing/components/legal/DisclaimerPage";
+import PaymentCancelPage from "@/features/payment/components/PaymentCancelPage";
+import PaymentSuccessPage from "@/features/payment/components/PaymentSuccessPage";
+import InvestorProfilePage from "@/features/profile/components/InvestorProfilePage";
+import { SubscriptionPage } from "@/features/subscription";
+import InvestorVerificationPage from "@/features/verification/components/InvestorVerificationPage";
+import NotFoundPage from "@/shared/components/NotFoundPage";
+import { useEffect } from "react";
+import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router";
+import DashboardLayout from "./layout/DashboardLayout";
+import PublicLayout from "./layout/PublicLayout";
 
 // ─── Protected route wrapper ──────────────────────────────────────────────────
 
-function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuth();
+function getDashboardPathForRole(role) {
+  if (role === ROLES.FOUNDER) {
+    return "/dashboard/founder";
+  }
+  if (role === ROLES.INVESTOR) {
+    return "/dashboard/investor";
+  }
+  return "/login";
+}
+
+function ProtectedRoute({ children, allowedRoles }) {
+  const { isAuthenticated, role } = useAuth();
+
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
+
+  if (Array.isArray(allowedRoles) && allowedRoles.length > 0 && !allowedRoles.includes(role)) {
+    return <Navigate to={getDashboardPathForRole(role)} replace />;
+  }
+
   return children;
 }
 
@@ -48,7 +67,13 @@ function DealDetailWrapper({ onNavigate }) {
 
 export default function App() {
   const rNavigate = useNavigate();
+  const location = useLocation();
   const { role, logout, isAuthenticated } = useAuth();
+
+  // Scroll to top on every route change
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [location.pathname]);
 
   const navigate = (page, dealId) => {
     // If the 'page' starts with a slash or contains one, treat as direct path
@@ -57,11 +82,36 @@ export default function App() {
       rNavigate(targetPath);
       return;
     }
+    // Special navigations that require role/ auth context
+    if (page === "explore-deals") {
+      if (!isAuthenticated) {
+        rNavigate('/login');
+        return;
+      }
+      if (role === 'founder') {
+        rNavigate('/dashboard/founder/deals');
+        return;
+      }
+      rNavigate('/dashboard/investor/deals');
+      return;
+    }
+
+    if (page === "deal-detail" && dealId !== undefined) {
+      if (!isAuthenticated) {
+        rNavigate('/login');
+        return;
+      }
+      if (role === 'founder') {
+        rNavigate(`/dashboard/founder/deals/${dealId}`);
+        return;
+      }
+      rNavigate(`/dashboard/investor/deals/${dealId}`);
+      return;
+    }
 
     const routes = {
       landing: "/",
       auth: "/login",
-      "deal-feed": "/deals",
       "investor-dashboard": "/dashboard/investor",
       "founder-dashboard": "/dashboard/founder",
       subscription: "/subscription",
@@ -71,9 +121,7 @@ export default function App() {
       disclaimer: "/disclaimer",
     };
 
-    if (page === "deal-detail" && dealId !== undefined) {
-      rNavigate(`/deals/${dealId}`);
-    } else if (routes[page]) {
+    if (routes[page]) {
       rNavigate(routes[page]);
     }
   };
@@ -95,14 +143,18 @@ export default function App() {
       <div className="relative z-10 h-full">
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<LandingPage onNavigate={navigate} />} />
+          <Route path="/" element={
+            isAuthenticated 
+              ? <Navigate to={role === 'founder' ? '/dashboard/founder' : '/dashboard/investor'} replace />
+              : <LandingPage onNavigate={navigate} />
+          } />
           <Route path="/login" element={
             isAuthenticated 
               ? <Navigate to={role === 'founder' ? '/dashboard/founder' : '/dashboard/investor'} replace />
               : <AuthPage onBack={() => window.history.back()} onNavigate={navigate} />
           } />
-          <Route path="/deals" element={<PublicLayout onNavigate={navigate}><DealFeed {...sharedProps} /></PublicLayout>} />
-          <Route path="/deals/:id" element={<PublicLayout onNavigate={navigate}><DealDetailWrapper onNavigate={navigate} /></PublicLayout>} />
+          <Route path="/deals" element={<Navigate to="/" replace />} />
+          <Route path="/deals/:id" element={<Navigate to="/" replace />} />
           <Route path="/subscription" element={<PublicLayout onNavigate={navigate}><SubscriptionPage {...sharedProps} /></PublicLayout>} />
           <Route path="/payment/success" element={<PaymentSuccessPage />} />
           <Route path="/payment/cancel" element={<PaymentCancelPage />} />
@@ -115,7 +167,7 @@ export default function App() {
 
           {/* Protected routes */}
           <Route path="/dashboard/investor/*" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={[ROLES.INVESTOR]}>
               <DashboardLayout userRole="investor" onNavigate={navigate} onLogout={logout}>
                 <Routes>
                   <Route path="/" element={<InvestorDashboard {...sharedProps} />} />
@@ -132,12 +184,15 @@ export default function App() {
             </ProtectedRoute>
           } />
           <Route path="/dashboard/founder/*" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={[ROLES.FOUNDER]}>
               <DashboardLayout userRole="founder" onNavigate={navigate} onLogout={logout}>
                 <FounderDashboard {...sharedProps} />
               </DashboardLayout>
             </ProtectedRoute>
           } />
+          
+          {/* 404 Not Found Catch-All */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>
     </div>

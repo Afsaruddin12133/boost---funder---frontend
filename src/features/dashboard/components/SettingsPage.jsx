@@ -166,15 +166,15 @@ export default function SettingsPage() {
                   <div className="space-y-4 max-w-md">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-1">Current Password</label>
-                      <Input type="password" underline className="bg-white/5 border-white/10 rounded-xl" />
+                      <Input type="password" className="bg-white/5 border-white/10 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-1">New Password</label>
-                      <Input type="password" underline className="bg-white/5 border-white/10 rounded-xl" />
+                      <Input type="password" className="bg-white/5 border-white/10 rounded-xl" />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-white/40 uppercase tracking-widest ml-1">Confirm New Password</label>
-                      <Input type="password" underline className="bg-white/5 border-white/10 rounded-xl" />
+                      <Input type="password" className="bg-white/5 border-white/10 rounded-xl" />
                     </div>
                   </div>
                 </section>

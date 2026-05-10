@@ -1,17 +1,14 @@
-import { 
-  Mail, 
-  Phone, 
-  MessageCircle, 
-  Facebook, 
-  Twitter, 
-  Linkedin, 
-  Instagram, 
-  ShieldCheck, 
-  CreditCard,
-  Lock,
-  Download,
+import {
   Apple,
-  Play
+  Facebook,
+  Instagram,
+  Linkedin,
+  Mail,
+  MessageCircle,
+  Phone,
+  Play,
+  ShieldCheck,
+  Twitter
 } from "lucide-react";
 import Logo from "./Logo";
 
@@ -43,15 +40,15 @@ const SiteFooter = ({
   };
 
   const sections = [
-    {
-      title: "Platform",
-      links: [
-        { label: "Featured Deals", type: "scroll", target: "featured" },
-        { label: "Why BoostFundr", type: "scroll", target: "features" },
-        { label: "How It Works", type: "scroll", target: "how" },
-        { label: "Explore Market", type: "route", target: "deal-feed" }
-      ]
-    },
+        {
+          title: "Platform",
+          links: [
+            { label: "Featured Deals", type: "scroll", target: "featured" },
+            { label: "Why BoostFundr", type: "scroll", target: "features" },
+            { label: "How It Works", type: "scroll", target: "how" },
+            { label: "Explore Market", type: "route", target: "explore-deals" }
+          ]
+        },
     {
       title: "Legal",
       links: [

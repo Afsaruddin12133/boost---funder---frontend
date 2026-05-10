@@ -24,7 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 
@@ -136,6 +136,14 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
   const currentPath = location.pathname;
   const navigateRouter = useNavigate();
   const [searchParams] = useSearchParams();
+  const mainRef = useRef(null);
+
+  // Auto-scroll to top of the dashboard main container on route change
+  useEffect(() => {
+    if (mainRef.current) {
+      mainRef.current.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    }
+  }, [currentPath]);
 
   // Auto-sync isVerified status to localStorage/AuthContext
   useEffect(() => {
@@ -314,7 +322,7 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
         </header>
 
         {/* Main Content Area - Independently Scrollable */}
-        <main className="flex-1 overflow-y-auto p-4 md:p-5 custom-scrollbar">
+        <main ref={mainRef} className="flex-1 overflow-y-auto p-4 md:p-5 custom-scrollbar">
           <div className="max-w-[1600px] mx-auto min-h-full flex flex-col">
             <div className="flex-1">
               {children}

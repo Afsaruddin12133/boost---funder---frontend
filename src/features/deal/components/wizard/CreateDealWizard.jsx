@@ -224,15 +224,6 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
     try {
       const { isFormData, payload } = getStepPayload(currentStep);
       
-      console.log(`--- Submitting Step ${currentStep} Payload ---`);
-      if (isFormData) {
-        for (let [key, value] of payload.entries()) {
-          console.log(`${key}:`, value);
-        }
-      } else {
-        console.log(payload);
-      }
-      
       let response;
 
       if (currentStep === 1 && !dealId) {
@@ -268,7 +259,6 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
     if (success && currentStep < 5) {
       setCurrentStep(s => s + 1);
     } else if (success && currentStep === 5) {
-      console.log("=== Final Complete Form Data ===", data);
       onSuccess?.();
     }
   };

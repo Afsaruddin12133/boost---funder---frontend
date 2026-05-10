@@ -1,10 +1,10 @@
-import { useState } from "react";
-import { Search, Bookmark, TrendingUp, Users, MapPin, LayoutDashboard, LogOut, Bell, Settings, Rocket } from "lucide-react";
-import { Button } from "@/shared/ui/button";
-import { Input } from "@/shared/ui/input";
-import { Card } from "@/shared/ui/card";
-import { Badge } from "@/shared/ui/badge";
 import SiteFooter from "@/shared/components/SiteFooter";
+import { Badge } from "@/shared/ui/badge";
+import { Button } from "@/shared/ui/button";
+import { Card } from "@/shared/ui/card";
+import { Input } from "@/shared/ui/input";
+import { Bell, Bookmark, LayoutDashboard, LogOut, MapPin, Rocket, Search, Settings, TrendingUp, Users } from "lucide-react";
+import { useState } from "react";
 const MOCK_DEALS = [
   {
     id: 1,
@@ -104,7 +104,7 @@ export default function DealFeed({ onNavigate, userRole, onLogout }) {
 
         <nav className="flex-1 p-4 space-y-1">
           <button
-    onClick={() => onNavigate("deal-feed")}
+    onClick={() => onNavigate("explore-deals")}
     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-[#01F27B]/10 text-[#01F27B]"
   >
             <TrendingUp className="w-5 h-5" />

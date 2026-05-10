@@ -1,12 +1,12 @@
 import { useAuth } from "@/features/auth/hooks/useAuth";
 import { featuredDeals, features } from "@/features/landing/data/landingData";
 import { formatCurrency, getProgress, handleScrollTo } from "@/features/landing/utils/landingUtils";
+import Logo from "@/shared/components/Logo";
 import SiteFooter from "@/shared/components/SiteFooter";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { ArrowRight, ArrowUpRight, CheckCircle, Rocket, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, CheckCircle, Zap } from "lucide-react";
 import { useEffect } from "react";
-import Logo from "@/shared/components/Logo";
 export default function LandingPage({ onNavigate }) {
   
   const { isAuthenticated, role } = useAuth();
@@ -494,7 +494,7 @@ export default function LandingPage({ onNavigate }) {
       onNavigate={onNavigate}
       onScrollTo={handleScrollTo}
       onLinkAction={(link) => {
-        if (link.type === "route" && link.target === "deal-feed") {
+        if (link.type === "route" && link.target === "explore-deals") {
           handleExploreDeals();
           return true;
         }

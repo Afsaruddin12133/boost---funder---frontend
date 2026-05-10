@@ -10,7 +10,8 @@ import {
   TrendingUp, 
   Target,
   ShieldCheck,
-  Calendar
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 import {
     PLACEHOLDER_MEDIA,
@@ -30,6 +31,8 @@ export default function DealCard({
   hideActions = false,
   isSubmitting = false
 }) {
+
+  console.log(deal);
   const media = getDealMedia(deal);
   const imageSrc = media[0] || PLACEHOLDER_MEDIA;
   const name = getDealName(deal);
@@ -40,7 +43,8 @@ export default function DealCard({
   const isVerified = deal?.isVerified || deal?.status === 'verified';
   const isComplete = deal?.status === 'complete';
   const isApproved = deal?.status === 'approved' || deal?.status === 'published' || deal?.status === 'active';
-  const canShowActions = !hideActions && (onEdit || onRequestDelete || isComplete);
+  const isRejected = deal?.status === 'rejected';
+  const canShowActions = !hideActions && (onEdit || onRequestDelete || isComplete || isRejected);
 
   return (
     <div className="h-full transition-all duration-500">
@@ -95,6 +99,18 @@ export default function DealCard({
 
           {/* Progress Section */}
           <div className="mt-auto space-y-5">
+            {isRejected && (
+              <div className="bg-red-500/10 border border-red-500/20 p-3 rounded-xl flex items-start gap-2.5 shadow-xl">
+                <AlertCircle className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
+                <div>
+                  <h4 className="text-[9px] font-black text-red-400 uppercase tracking-widest mb-1">Admin Feedback</h4>
+                  <p className="text-xs text-red-100/70 leading-relaxed font-medium">
+                    {deal?.rejectionReason || deal?.adminNotes || deal?.statusMessage || "Please review your deal information and try again."}
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex justify-between items-end px-1">
               <div className="space-y-0.5">
                 <span className="block text-[9px] font-black text-white/20 uppercase tracking-widest">Raised</span>
@@ -142,6 +158,9 @@ export default function DealCard({
               {isPending && (
                 <p className="text-[8px] font-bold text-blue-400 uppercase tracking-tighter animate-pulse">Waiting for Admin Approval</p>
               )}
+              {isRejected && (
+                <p className="text-[8px] font-bold text-red-400 uppercase tracking-tighter">Needs Updates</p>
+              )}
               {isComplete && (
                 <p className="text-[8px] font-bold text-[#01F27B] uppercase tracking-tighter animate-pulse">Ready for Review</p>
               )}
@@ -177,20 +196,20 @@ export default function DealCard({
                 <span className="text-[8px] font-black uppercase tracking-widest">Open</span>
               </button>
 
-              {isComplete && (
+              {(isComplete || isRejected) && (
                 <button
                   className="flex flex-col items-center gap-2 text-[#01F27B] hover:scale-105 transition-all group/btn"
                   onClick={(e) => { e.stopPropagation(); onSubmitForReview?.(deal); }}
                 >
-                  <div className="w-11 h-11 rounded-2xl bg-[#01F27B] flex items-center justify-center shadow-[0_0_20px_rgba(1,242,123,0.4)] transition-all group-hover/btn:shadow-[0_0_30px_rgba(1,242,123,0.6)]">
+                  <div className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${isRejected ? 'bg-amber-500 shadow-[0_0_20px_rgba(245,158,11,0.4)] group-hover/btn:shadow-[0_0_30px_rgba(245,158,11,0.6)]' : 'bg-[#01F27B] shadow-[0_0_20px_rgba(1,242,123,0.4)] group-hover/btn:shadow-[0_0_30px_rgba(1,242,123,0.6)]'}`}>
                     {isSubmitting ? (
                       <Loader size="sm" className="text-black" />
                     ) : (
                       <ShieldCheck className="w-5 h-5 text-black" />
                     )}
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-tighter text-[#01F27B]">
-                    {isSubmitting ? "Submitting..." : "Admin Review"}
+                  <span className={`text-[9px] font-black uppercase tracking-tighter ${isRejected ? 'text-amber-500' : 'text-[#01F27B]'}`}>
+                    {isSubmitting ? "Submitting..." : isRejected ? "Resubmit" : "Admin Review"}
                   </span>
                 </button>
               )}
