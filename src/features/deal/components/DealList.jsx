@@ -25,7 +25,16 @@ export default function DealList({ onNavigate, onEdit, onView, onCreate, compact
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const handleSubmitForReview = (deal) => {
+    const packageId = deal.packageId || deal.package;
     const dealId = deal.id ?? deal._id;
+
+    if (!packageId) {
+      const goalAmount = deal?.funding?.goalAmount || deal?.fundingGoal || deal?.goalAmount || 0;
+      toast("Please select a package before submitting for review.", { icon: "📦" });
+      onNavigate(`/dashboard/founder/subscription?dealId=${dealId}&goalAmount=${goalAmount}`);
+      return;
+    }
+
     submitDeal.mutate(dealId, {
       onSuccess: () => {
         toast.success("Deal submitted for review");

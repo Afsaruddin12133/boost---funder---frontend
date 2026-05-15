@@ -108,6 +108,7 @@ function MiniStat({ label, value, icon: Icon, sub, locked, onUpgrade }) {
 // ─── MAIN DASHBOARD ──────────────────────────────────────────────────────────
 
 export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
+
   const navigate = useNavigate();
   const submitDealMutation = useSubmitDeal();
   const { data: subscriptionData } = useMySubscription();
@@ -146,7 +147,7 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
   }
 
   if (!activeDeal) return null;
-
+  console.log("activeDeal",activeDeal)
   const { basicInfo = {}, story = {}, funding = {}, execution = {}, documents = {} } = activeDeal;
   const name = basicInfo.startupName || activeDeal.startupName || "The Startup";
   const tagline = basicInfo.tagline || activeDeal.tagline || "";
@@ -236,34 +237,56 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
         </div>
       </div>
 
+      {/* ─── THE STORY NARRATIVE (FULL WIDTH BLOCK) ─── */}
+      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 mb-10 overflow-hidden relative group">
+         <div className="absolute top-0 right-0 w-64 h-64 bg-[#01F27B]/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
+         
+         <div className="flex items-center gap-3 mb-10">
+            <div className="w-10 h-10 rounded-2xl bg-[#01F27B]/10 flex items-center justify-center text-[#01F27B]">
+               <Target className="w-5 h-5" />
+            </div>
+            <div>
+               <h3 className="text-xl font-black text-white tracking-tight">The Story</h3>
+               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Core Narrative</p>
+            </div>
+         </div>
+
+         <div className="space-y-12">
+            {story?.problem && (
+               <div className="space-y-4">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">The Problem</h4>
+                  <p className="text-[15px] text-white/70 leading-relaxed">"{story.problem}"</p>
+               </div>
+            )}
+            
+            {story?.solution && (
+               <div className="space-y-4 pt-10 border-t border-white/5">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">The Solution</h4>
+                  <p className="text-[15px] text-white/70 leading-relaxed">"{story.solution}"</p>
+               </div>
+            )}
+
+            {story?.targetMarket && (
+               <div className="space-y-4 pt-10 border-t border-white/5">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">Target Market</h4>
+                  <p className="text-[15px] text-white/70 leading-relaxed">"{story.targetMarket}"</p>
+               </div>
+            )}
+
+            {story?.whyNow && (
+               <div className="space-y-4 pt-10 border-t border-white/5">
+                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">Why Now</h4>
+                  <p className="text-[15px] text-white/70 leading-relaxed">"{story.whyNow}"</p>
+               </div>
+            )}
+         </div>
+      </div>
+
       {/* ─── DASHBOARD GRID (ORGANIC HEIGHTS) ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
         {/* LEFT COLUMN: THE STORY (4/12) */}
         <div className="lg:col-span-4 space-y-8 h-fit">
-          <DashCard title="The Vision" icon={Target} subtitle="North Star" className="p-8 h-fit">
-             <p className="text-lg text-white/80 leading-relaxed font-medium italic">"{story.vision || "We are redefining the future of this industry through innovation and focus."}"</p>
-          </DashCard>
-
-          <DashCard title="Problem & Solution" icon={Zap} subtitle="Product Market Fit" className="p-8 h-fit">
-             <div className="space-y-8">
-               <div className="space-y-3">
-                 <div className="flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
-                   <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30">The Challenge</h4>
-                 </div>
-                 <p className="text-[15px] text-white/70 leading-relaxed">{story.problem}</p>
-               </div>
-               <div className="w-full h-px bg-white/5" />
-               <div className="space-y-3">
-                 <div className="flex items-center gap-2">
-                   <div className="w-1.5 h-1.5 rounded-full bg-[#01F27B]" />
-                   <h4 className="text-[10px] font-black uppercase tracking-widest text-white/30">The Innovation</h4>
-                 </div>
-                 <p className="text-[15px] text-white/70 leading-relaxed">{story.solution}</p>
-               </div>
-             </div>
-          </DashCard>
 
           <DashCard title="The Advantage" icon={ShieldCheck} subtitle="Defensibility" className="p-8 h-fit">
              <div className="space-y-6">
@@ -304,18 +327,6 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
              </div>
           </DashCard>
 
-          <DashCard title="Market & Timing" icon={Globe} subtitle="Opportunity" className="p-8 h-fit">
-             <div className="space-y-6">
-                <div className="space-y-3">
-                   <h4 className="text-[10px] font-black uppercase text-white/20 tracking-widest">Target Market</h4>
-                   <p className="text-md text-white/80 italic font-medium leading-relaxed">"{story.targetMarket}"</p>
-                </div>
-                <div className="pt-6 border-t border-white/5 space-y-3">
-                   <h4 className="text-[10px] font-black uppercase text-white/20 tracking-widest">Why Now?</h4>
-                   <p className="text-[15px] text-white/70 leading-relaxed">{story.whyNow}</p>
-                </div>
-             </div>
-          </DashCard>
 
           {/* DESKTOP Q&A INTEGRATION (All items here for desktop) */}
           {activeDeal.execution?.qa?.length > 0 && (

@@ -4,6 +4,7 @@ import DealDetailPage from "@/features/deal/components/DealDetailPage";
 import { useMyDeals } from "@/features/deal/hooks";
 import FounderProfilePage from "@/features/profile/components/FounderProfilePage";
 import FounderVerificationPage from "@/features/verification/components/FounderVerificationPage";
+import FounderSubscriptionPage from "@/features/subscription/components/FounderSubscriptionPage";
 import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
@@ -613,66 +614,7 @@ export default function FounderDashboard({ onNavigate }) {
         </div>
       } />
       <Route path="verification" element={<FounderVerificationPage />} />
-      <Route path="subscription" element={
-        <div className="w-full h-full md:min-h-[calc(100vh-140px)] flex items-center justify-center py-6 md:py-0 px-4">
-          <div className="max-w-4xl w-full flex flex-col items-center justify-center text-center space-y-6 md:space-y-8">
-            <div className="relative group">
-              <div className="absolute inset-0 bg-[#01F27B] blur-[60px] rounded-full opacity-20 group-hover:opacity-30 transition-opacity" />
-              <div className="relative w-20 h-20 lg:w-24 lg:h-24 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-2xl flex items-center justify-center shadow-2xl">
-                <CreditCard className="w-10 h-10 lg:w-12 lg:h-12 text-[#01F27B]" />
-              </div>
-            </div>
-
-            <div className="space-y-4 max-w-2xl">
-              <Badge className="bg-[#01F27B]/10 text-[#01F27B] border border-[#01F27B]/20 px-4 py-1.5 rounded-full font-black tracking-widest text-[10px] lg:text-xs uppercase">
-                Future Feature
-              </Badge>
-              <h1 className="text-3xl lg:text-5xl font-black tracking-tighter text-white">
-                Founder Subscription <br />
-                <span className="text-[#01F27B]">Coming Soon</span>
-              </h1>
-              <p className="text-white/50 text-base lg:text-lg leading-relaxed">
-                We're crafting a premium experience to help you close your funding rounds at record speed.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full mt-12">
-              {[
-                {
-                  title: "Profile Boosting",
-                  desc: "Rank higher in investor searches and stand out as a top-tier founder.",
-                  icon: Zap
-                },
-                {
-                  title: "Deal Promotion",
-                  desc: "Get your startup and SaaS deals featured directly in front of the right investors.",
-                  icon: Rocket
-                },
-                {
-                  title: "Fast-Track Funding",
-                  desc: "Accelerate your investment journey with high-priority visibility tools.",
-                  icon: ShieldCheck
-                }
-              ].map((feature, i) => (
-                <Card key={i} className="bg-white/[0.03] border-white/10 p-6 backdrop-blur-xl hover:bg-white/[0.05] transition-all hover:border-[#01F27B]/30 group text-left">
-                  <div className="w-12 h-12 rounded-2xl bg-[#01F27B]/10 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
-                    <feature.icon className="w-6 h-6 text-[#01F27B]" />
-                  </div>
-                  <h3 className="text-white font-bold text-lg mb-2">{feature.title}</h3>
-                  <p className="text-white/40 text-sm leading-relaxed">{feature.desc}</p>
-                </Card>
-              ))}
-            </div>
-
-            <div className="bg-[#01F27B]/5 border border-[#01F27B]/10 p-8 rounded-3xl max-w-3xl w-full mt-12 text-center backdrop-blur-sm">
-              <p className="text-[#01F27B] font-medium mb-2">Interested in early access?</p>
-              <p className="text-white/70 text-sm lg:text-base">
-                We'll notify you the moment we launch these premium tools to help you scale your startup faster than ever before.
-              </p>
-            </div>
-          </div>
-        </div>
-      } />
+      <Route path="subscription" element={<FounderSubscriptionPage />} />
       <Route path="settings" element={<SettingsPage />} />
       <Route path="*" element={<Navigate to="" replace />} />
     </Routes>

@@ -1,4 +1,4 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://boost-funder.onrender.com";
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 function getAuthHeader() {
   const token = localStorage.getItem("boostfundr_token");

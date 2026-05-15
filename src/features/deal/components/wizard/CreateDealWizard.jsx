@@ -56,6 +56,14 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
       flat.deadline = flat.deadline.split("T")[0];
     }
     
+    // Prefill goalAmount from localStorage if it's empty
+    if (!flat.goalAmount) {
+      const savedGoal = localStorage.getItem('founderFundingGoal');
+      if (savedGoal) {
+        flat.goalAmount = savedGoal;
+      }
+    }
+
     return flat;
   };
 
@@ -152,6 +160,13 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
         if (data[k] !== undefined && data[k] !== null && data[k] !== "") fd.append(k, data[k]);
       });
       if (data.startupLogo instanceof File) fd.append("startupLogo", data.startupLogo);
+
+      // Backend might require fundingGoal to initialize deal depending on package state
+      const goal = data.goalAmount || localStorage.getItem('founderFundingGoal');
+      if (goal) {
+        fd.append("fundingGoal", String(goal).replace(/[^\d.-]/g, ""));
+      }
+
       return { isFormData: true, payload: fd };
     }
     
@@ -173,6 +188,12 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
       });
       if (data.deadline) payload.deadline = data.deadline;
       if (data.CHURN) payload.CHURN = String(data.CHURN);
+
+      // Ensure fundingGoal is strictly set for the backend requirement
+      if (payload.goalAmount) {
+        payload.fundingGoal = payload.goalAmount;
+      }
+
       return { isFormData: false, payload };
     }
 
@@ -210,6 +231,13 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
           fd.append(k, val);
         }
       });
+
+      // Append selected package ID when completing the deal
+      const packageId = localStorage.getItem('selectedFounderPackageId');
+      if (packageId) {
+        fd.append("packageId", packageId);
+      }
+
       return { isFormData: true, payload: fd };
     }
   };

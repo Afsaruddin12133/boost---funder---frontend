@@ -21,6 +21,10 @@ import { Navigate, Route, Routes, useLocation, useNavigate, useParams } from "re
 import DashboardLayout from "./layout/DashboardLayout";
 import PublicLayout from "./layout/PublicLayout";
 
+const CHATBOT_WIDGET_SCRIPT_ID = "chatbot-widget-script";
+const CHATBOT_WIDGET_URL = "https://unpkg.com/@getwidgets/chatbot-widget@latest/dist/chatbot-widget.umd.js";
+const CHATBOT_WIDGET_ID = "f587f985-83a2-471b-877e-ad1c6f9b4283";
+
 // ─── Protected route wrapper ──────────────────────────────────────────────────
 
 function getDashboardPathForRole(role) {
@@ -69,6 +73,46 @@ export default function App() {
   const rNavigate = useNavigate();
   const location = useLocation();
   const { role, logout, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    const initWidget = () => {
+      if (window.__chatbotWidgetInitialized) {
+        return;
+      }
+
+      if (window.ChatbotWidget?.init) {
+        window.ChatbotWidget.init({ widgetId: CHATBOT_WIDGET_ID });
+        window.__chatbotWidgetInitialized = true;
+      }
+    };
+
+    if (window.ChatbotWidget?.init) {
+      initWidget();
+      return undefined;
+    }
+
+    const existingScript = document.getElementById(CHATBOT_WIDGET_SCRIPT_ID);
+
+    if (existingScript) {
+      existingScript.addEventListener("load", initWidget, { once: true });
+      return undefined;
+    }
+
+    const script = document.createElement("script");
+    script.id = CHATBOT_WIDGET_SCRIPT_ID;
+    script.src = CHATBOT_WIDGET_URL;
+    script.async = true;
+    script.onload = initWidget;
+    script.onerror = () => {
+      console.error("Failed to load the chatbot widget script.");
+    };
+
+    document.body.appendChild(script);
+
+    return () => {
+      script.onload = null;
+    };
+  }, []);
 
   // Scroll to top on every route change
   useEffect(() => {
@@ -141,6 +185,7 @@ export default function App() {
       </div>
 
       <div className="relative z-10 h-full">
+        <div id="chatbot-root" />
         <Routes>
           {/* Public routes */}
           <Route path="/" element={
