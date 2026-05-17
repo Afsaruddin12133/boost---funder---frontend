@@ -38,7 +38,11 @@ export const normalizePlan = (subscription) => {
 
 export const computeProgress = (raised, goal) => {
   if (!goal || goal <= 0) return 0;
-  return Math.min(100, Math.round((raised / goal) * 100));
+  const rawPercent = (raised / goal) * 100;
+  if (raised > 0 && rawPercent < 1) {
+    return 1;
+  }
+  return Math.min(100, Math.round(rawPercent));
 };
 
 export const computeDaysLeft = (deadline) => {

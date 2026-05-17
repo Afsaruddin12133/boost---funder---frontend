@@ -3,33 +3,32 @@ import { CreateDealForm, DealList } from "@/features/deal";
 import DealDetailPage from "@/features/deal/components/DealDetailPage";
 import { useMyDeals } from "@/features/deal/hooks";
 import FounderProfilePage from "@/features/profile/components/FounderProfilePage";
-import FounderVerificationPage from "@/features/verification/components/FounderVerificationPage";
 import FounderSubscriptionPage from "@/features/subscription/components/FounderSubscriptionPage";
+import FounderVerificationPage from "@/features/verification/components/FounderVerificationPage";
 import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
-  CheckCircle, Clock,
-  CreditCard,
-  Eye,
-  FileText,
-  Plus,
-  Rocket,
-  ShieldCheck,
-  TrendingUp,
-  User,
-  Zap
+    CheckCircle, Clock,
+    Eye,
+    FileText,
+    Plus,
+    Rocket,
+    ShieldCheck,
+    TrendingUp,
+    User,
+    Zap
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Navigate, Route, Routes, useLocation, useSearchParams } from "react-router";
 import {
-  Bar,
-  BarChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis
+    Bar,
+    BarChart,
+    ResponsiveContainer,
+    Tooltip,
+    XAxis
 } from "recharts";
 import SettingsPage from "./SettingsPage";
 

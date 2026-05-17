@@ -282,14 +282,19 @@
     width: 6px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 10px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(1, 242, 123, 0.1);
+    background: rgba(1, 242, 123, 0.35);
     border-radius: 10px;
+    border: 1.5px solid transparent;
+    background-clip: padding-box;
     transition: all 0.3s ease;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(1, 242, 123, 0.3);
+    background: rgba(1, 242, 123, 0.7);
+    border: 1.5px solid transparent;
+    background-clip: padding-box;
   }
 }

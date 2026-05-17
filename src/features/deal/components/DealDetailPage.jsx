@@ -40,10 +40,17 @@ import { getAccessLocks, hasValue, normalizePlan } from "../utils/dealAccess";
 import { formatCurrency, getStatusMeta } from "../utils/dealUtils";
 import DaysLeftBadge from "./DaysLeftBadge";
 import ProgressBar from "./ProgressBar";
+import { ProductStorySection, MarketStrategySection } from "./DealDetailSections";
 
 // ─── MINIMALIST MODULE COMPONENTS ────────────────────────────────────────────
 
 function DashCard({ title, subtitle, icon: Icon, children, className, locked, onUpgrade }) {
+  const isElite = locked === "elite";
+  const planName = isElite ? "Elite" : "Pro";
+  const planDesc = isElite 
+    ? "Direct founder messaging and secure document vault."
+    : "Market strategy, traction stats, team, and capital allocation.";
+
   return (
     <Card className={cn("bg-white/5 backdrop-blur-xl border-white/10 p-5 relative overflow-hidden flex flex-col h-full group", className)}>
       <div className="absolute top-0 right-0 w-24 h-24 bg-[#01F27B]/5 rounded-full blur-2xl -mr-8 -mt-8 pointer-events-none" />
@@ -61,17 +68,19 @@ function DashCard({ title, subtitle, icon: Icon, children, className, locked, on
         {locked && <Lock className="w-4 h-4 text-amber-500" />}
       </div>
 
-      <div className={cn("flex-1", locked && "blur-md select-none opacity-40")}>
+      <div className={cn("flex-1 flex flex-col min-h-0", locked && "blur-md select-none opacity-40")}>
         {children}
       </div>
 
       {locked && (
-        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/60 backdrop-blur-md p-6 text-center group cursor-pointer" onClick={onUpgrade}>
-          <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(245,158,11,0.2)] group-hover:scale-110 transition-transform">
-             <Lock className="text-amber-500 w-6 h-6" />
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-black/75 backdrop-blur-md p-6 text-center group cursor-pointer" onClick={onUpgrade}>
+          <div className="w-12 h-12 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center mb-3 shadow-[0_0_30px_rgba(245,158,11,0.2)] group-hover:scale-110 transition-transform">
+             <Lock className="text-amber-500 w-5 h-5" />
           </div>
-          <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] rounded-lg h-8 px-4">
-            Upgrade to Unlock
+          <h4 className="text-sm font-black text-white mb-1 uppercase tracking-wider">Locked Feature</h4>
+          <p className="text-[10px] text-white/50 max-w-[200px] mb-4 leading-normal">{planDesc}</p>
+          <Button size="sm" className="bg-amber-500 hover:bg-amber-400 text-black font-black text-[10px] uppercase tracking-wider rounded-lg h-8 px-4">
+            Upgrade to {planName}
           </Button>
         </div>
       )}
@@ -148,7 +157,40 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
 
   if (!activeDeal) return null;
   console.log("activeDeal",activeDeal)
-  const { basicInfo = {}, story = {}, funding = {}, execution = {}, documents = {} } = activeDeal;
+  const basicInfo = activeDeal.basicInfo || {};
+  const execution = activeDeal.execution || {};
+  const funding = activeDeal.funding || {};
+  const documents = activeDeal.documents || {};
+  const story = activeDeal.story || {};
+
+  const normalizedExecution = {
+    ...execution,
+    businessModel: execution.businessModel || activeDeal.businessModel,
+    goToMarket: execution.goToMarket || activeDeal.goToMarket,
+    advantage: execution.advantage || activeDeal.advantage,
+    team: (execution.team && execution.team.length) ? execution.team : (activeDeal.team || []),
+    useOfFunds: (execution.useOfFunds && execution.useOfFunds.length) ? execution.useOfFunds : (activeDeal.useOfFunds || []),
+    qa: (execution.qa && execution.qa.length) ? execution.qa : (activeDeal.qa || []),
+    revenue: execution.revenue || activeDeal.revenue,
+    topCompetitor: execution.topCompetitor || activeDeal.topCompetitor || story?.topCompetitor,
+  };
+
+  const displayTeam = (lockedPremium || !normalizedExecution.team?.length)
+    ? [
+        { name: "Sarah Jenkins", role: "Chief Executive Officer" },
+        { name: "Dr. Alex Rivera", role: "Chief Technology Officer" },
+        { name: "Michael Chen", role: "Head of Growth" },
+      ]
+    : normalizedExecution.team;
+
+  const displayUseOfFunds = (lockedPremium || !normalizedExecution.useOfFunds?.length)
+    ? [
+        { category: "Product Development", percentage: 45 },
+        { category: "Marketing & Scaling", percentage: 30 },
+        { category: "Operations & Legal", percentage: 25 },
+      ]
+    : normalizedExecution.useOfFunds;
+
   const name = basicInfo.startupName || activeDeal.startupName || "The Startup";
   const tagline = basicInfo.tagline || activeDeal.tagline || "";
   const category = basicInfo.category || activeDeal.category || "General";
@@ -157,7 +199,7 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
   const website = basicInfo.startupWebsite || activeDeal.startupWebsite;
   const logo = basicInfo.startupLogo || activeDeal.startupLogo;
   const whatsappNumber = activeDeal.whatsappNumber || basicInfo.whatsappNumber;
-  const topCompetitor = activeDeal.topCompetitor || story?.topCompetitor;
+  const topCompetitor = normalizedExecution.topCompetitor || null;
 
   const raised = funding.raisedAmount ?? activeDeal.raisedAmount ?? 0;
   const goal = funding.goalAmount ?? activeDeal.goalAmount ?? 0;
@@ -200,23 +242,42 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
               <Badge className={cn("text-[9px] md:text-[10px] font-black uppercase px-2 md:px-3 py-0.5 md:py-1 rounded-full border", statusMeta.className)}>{statusMeta.label}</Badge>
             </div>
             {tagline && <p className="text-white/40 text-[10px] md:text-sm font-medium line-clamp-1">{tagline}</p>}
-            <div className="flex flex-wrap items-center gap-2 md:gap-3 mt-2 md:mt-3">
+            <div className="flex flex-wrap items-center gap-3 mt-3 md:mt-4">
+              {category && (
+                <div className="flex items-center gap-2 bg-white/5 border border-white/10 px-3.5 py-1.5 rounded-xl transition-all duration-300">
+                  <span className="text-white/70 text-[11px] md:text-[13px] font-bold uppercase tracking-wider">{category}</span>
+                </div>
+              )}
               {stage && (
-                <Badge className="bg-white/5 border-white/10 text-white/60 text-[9px] px-2 flex items-center gap-1.5">
-                  <TrendingUp className="w-3 h-3 text-[#01F27B]" />
-                  {stage}
-                </Badge>
+                <div className="flex items-center gap-2 bg-[#111] border border-[#222] hover:border-[#01F27B]/30 px-3.5 py-1.5 rounded-xl transition-all duration-300 group">
+                  <div className="w-5 h-5 rounded-lg bg-[#01F27B]/10 flex items-center justify-center">
+                    <TrendingUp className="w-3.5 h-3.5 text-[#01F27B] group-hover:scale-110 transition-transform" />
+                  </div>
+                  <span className="text-white/70 text-[11px] md:text-[13px] font-bold uppercase tracking-wider">{stage}</span>
+                </div>
               )}
               {location && (
-                <Badge className="bg-white/5 border-white/10 text-white/60 text-[9px] px-2 flex items-center gap-1.5">
-                  <MapPin className="w-3 h-3 text-[#01F27B]" />
-                  {location}
-                </Badge>
+                <div className="flex items-center gap-2 bg-[#111] border border-[#222] hover:border-[#01F27B]/30 px-3.5 py-1.5 rounded-xl transition-all duration-300 group">
+                  <div className="w-5 h-5 rounded-lg bg-[#01F27B]/10 flex items-center justify-center">
+                    <MapPin className="w-3.5 h-3.5 text-[#01F27B] group-hover:scale-110 transition-transform" />
+                  </div>
+                  <span className="text-white/70 text-[11px] md:text-[13px] font-bold uppercase tracking-wider">{location}</span>
+                </div>
               )}
               {website && (
-                 <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[10px] font-bold text-[#01F27B] hover:text-[#00d66d] bg-[#01F27B]/10 px-3 py-0.5 rounded-full border border-[#01F27B]/20 transition-all">
-                    <Globe className="w-3 h-3" /> Website
-                 </a>
+                <a 
+                  href={website.startsWith('http') ? website : `https://${website}`} 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="flex items-center gap-2 bg-gradient-to-r from-[#01F27B]/20 to-[#01F27B]/5 border border-[#01F27B]/30 hover:border-[#01F27B] hover:shadow-[0_0_20px_rgba(1,242,123,0.25)] px-4 py-1.5 rounded-xl transition-all duration-300 group"
+                >
+                  <div className="w-5 h-5 rounded-lg bg-[#01F27B] flex items-center justify-center shadow-[0_0_10px_rgba(1,242,123,0.3)]">
+                    <Globe className="w-3.5 h-3.5 text-black animate-pulse" />
+                  </div>
+                  <span className="text-[#01F27B] hover:text-[#00d66d] text-[12px] md:text-[14px] font-black uppercase tracking-widest flex items-center gap-1">
+                    Website <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                  </span>
+                </a>
               )}
             </div>
           </div>
@@ -237,82 +298,50 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
         </div>
       </div>
 
-      {/* ─── THE STORY NARRATIVE (FULL WIDTH BLOCK) ─── */}
-      <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-10 mb-10 overflow-hidden relative group">
-         <div className="absolute top-0 right-0 w-64 h-64 bg-[#01F27B]/5 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none" />
-         
-         <div className="flex items-center gap-3 mb-10">
-            <div className="w-10 h-10 rounded-2xl bg-[#01F27B]/10 flex items-center justify-center text-[#01F27B]">
-               <Target className="w-5 h-5" />
-            </div>
-            <div>
-               <h3 className="text-xl font-black text-white tracking-tight">The Story</h3>
-               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20">Core Narrative</p>
-            </div>
-         </div>
+      {/* ─── NEW UNIFIED SECTIONS ─── */}
+      <ProductStorySection story={story} />
+      <MarketStrategySection 
+        story={story} 
+        execution={normalizedExecution} 
+        topCompetitor={topCompetitor} 
+        lockedPremium={lockedPremium} 
+        onUpgrade={handleUpgrade} 
+      />
 
-         <div className="space-y-12">
-            {story?.problem && (
-               <div className="space-y-4">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">The Problem</h4>
-                  <p className="text-[15px] text-white/70 leading-relaxed">"{story.problem}"</p>
-               </div>
-            )}
-            
-            {story?.solution && (
-               <div className="space-y-4 pt-10 border-t border-white/5">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">The Solution</h4>
-                  <p className="text-[15px] text-white/70 leading-relaxed">"{story.solution}"</p>
-               </div>
-            )}
-
-            {story?.targetMarket && (
-               <div className="space-y-4 pt-10 border-t border-white/5">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">Target Market</h4>
-                  <p className="text-[15px] text-white/70 leading-relaxed">"{story.targetMarket}"</p>
-               </div>
-            )}
-
-            {story?.whyNow && (
-               <div className="space-y-4 pt-10 border-t border-white/5">
-                  <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-white/20 mb-2">Why Now</h4>
-                  <p className="text-[15px] text-white/70 leading-relaxed">"{story.whyNow}"</p>
-               </div>
-            )}
-         </div>
-      </div>
-
-      {/* ─── DASHBOARD GRID (ORGANIC HEIGHTS) ─── */}
+      {/* ─── DASHBOARD GRID (UNIFIED HEIGHTS) ─── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        {/* LEFT COLUMN: THE STORY (4/12) */}
-        <div className="lg:col-span-4 space-y-8 h-fit">
-
-          <DashCard title="The Advantage" icon={ShieldCheck} subtitle="Defensibility" className="p-8 h-fit">
-             <div className="space-y-6">
-                <p className="text-[15px] text-white/70 leading-relaxed">{execution?.advantage || activeDeal.advantage}</p>
-                {topCompetitor && (
-                  <div className="pt-6 border-t border-white/5 space-y-3">
-                     <h4 className="text-[10px] font-black uppercase text-white/20 tracking-widest">Top Competitor</h4>
-                     <p className="text-[15px] text-white/70 leading-relaxed">{topCompetitor}</p>
-                  </div>
-                )}
+        {/* LEFT COLUMN: EXECUTION TEAM (4/12) */}
+        <div className="lg:col-span-4 space-y-8">
+          <DashCard title="Execution Team" icon={Briefcase} subtitle="Key Humans" locked={lockedPremium ? "pro" : null} onUpgrade={handleUpgrade} className="p-8 h-[590px] flex flex-col justify-between">
+             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 mt-6">
+                {displayTeam?.map((member, i) => (
+                   <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-[#01F27B]/30 hover:bg-white/10 transition-all group/member">
+                      <div className="w-12 h-12 rounded-xl bg-[#01F27B]/10 flex items-center justify-center text-[#01F27B] font-black text-lg border border-[#01F27B]/10 group-hover/member:bg-[#01F27B] group-hover/member:text-black transition-all">
+                        {member.name?.charAt(0) || "F"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-md font-bold text-white truncate">{member.name}</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30">{member.role || "Founder"}</p>
+                      </div>
+                   </div>
+                ))}
              </div>
           </DashCard>
         </div>
 
         {/* MIDDLE COLUMN: THE TRACTION (4/12) */}
-        <div className="lg:col-span-4 space-y-8 h-fit">
-          <DashCard title="Traction Intelligence" icon={TrendingUp} subtitle="Live Performance" className="p-8 h-fit">
+        <div className="lg:col-span-4 space-y-8">
+          <DashCard title="Traction Intelligence" icon={TrendingUp} subtitle="Live Performance" locked={lockedPremium ? "pro" : null} onUpgrade={handleUpgrade} className="p-8 h-[590px] flex flex-col justify-between">
              <div className="grid grid-cols-2 gap-4">
-                <MiniStat label="Revenue" value={execution.revenue ? formatCurrency(execution.revenue) : "N/A"} icon={TrendingUp} locked={lockedPremium} onUpgrade={handleUpgrade} />
+                <MiniStat label="Revenue" value={normalizedExecution.revenue ? formatCurrency(normalizedExecution.revenue) : "N/A"} icon={TrendingUp} locked={lockedPremium} onUpgrade={handleUpgrade} />
                 <MiniStat label="Users" value={funding.users} icon={Users} locked={lockedPremium} onUpgrade={handleUpgrade} />
                 <MiniStat label="Growth" value={funding.growthRate ? `${funding.growthRate}%` : "N/A"} icon={Zap} locked={lockedPremium} onUpgrade={handleUpgrade} />
                 <MiniStat label="CAC" value={funding.CAC} icon={Target} locked={lockedPremium} onUpgrade={handleUpgrade} />
                 <MiniStat label="LTV" value={funding.LTV} icon={Layers} locked={lockedPremium} onUpgrade={handleUpgrade} />
                 <MiniStat label="Churn" value={funding.CHURN ? `${funding.CHURN}%` : "N/A"} icon={RefreshCw} locked={lockedPremium} onUpgrade={handleUpgrade} />
              </div>
-             <div className="mt-8 p-6 rounded-3xl bg-black/40 border border-white/5 shadow-inner">
+             <div className="mt-6 p-6 rounded-3xl bg-black/40 border border-white/5 shadow-inner">
                 <div className="flex justify-between items-center mb-6">
                   <span className="text-[11px] font-black text-white/30 uppercase tracking-widest">Funding Velocity</span>
                   <DaysLeftBadge deadline={deadline} />
@@ -320,38 +349,28 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
                 <div className="space-y-4">
                    <div className="flex justify-between items-end">
                       <span className="text-2xl font-black text-white">{formatCurrency(raised)}</span>
-                      <span className="text-xs font-black text-[#01F27B] bg-[#01F27B]/10 px-2 py-0.5 rounded-md border border-[#01F27B]/20">{Math.round((raised/goal)*100)}%</span>
+                      <span className="text-xs font-black text-[#01F27B] bg-[#01F27B]/10 px-2 py-0.5 rounded-md border border-[#01F27B]/20">{goal > 0 ? Math.min(100, Math.max(raised > 0 ? 1 : 0, Math.round((raised / goal) * 100))) : 0}%</span>
                    </div>
-                   <ProgressBar raised={raised} goal={goal} className="h-2.5 rounded-full" />
+                   <div className="w-full h-2.5 bg-white/10 rounded-full overflow-hidden mt-4">
+                      <div 
+                        className="h-full bg-gradient-to-r from-[#01F27B] to-[#01F27B]/70 rounded-full transition-all duration-700" 
+                        style={{ width: `${goal > 0 ? Math.min(100, Math.max(raised > 0 ? 1 : 0, Math.round((raised / goal) * 100))) : 0}%` }} 
+                      />
+                   </div>
+                   <div className="flex justify-between items-center text-[10px] text-white/40 font-bold uppercase tracking-wider mt-2">
+                      <span>Target {formatCurrency(goal)}</span>
+                   </div>
                 </div>
              </div>
           </DashCard>
 
 
-          {/* DESKTOP Q&A INTEGRATION (All items here for desktop) */}
-          {activeDeal.execution?.qa?.length > 0 && (
-            <div className="hidden lg:block space-y-4 pt-4">
-              <h4 className="text-[10px] font-black uppercase text-[#01F27B] tracking-[0.3em] mb-4">Founder Intelligence Q&A</h4>
-              <Accordion type="single" collapsible className="w-full space-y-3">
-                {activeDeal.execution.qa.map((item, i) => (
-                  <AccordionItem key={i} value={`qd-${i}`} className="border-white/5 bg-white/[0.02] rounded-2xl overflow-hidden px-5 transition-all hover:bg-white/[0.04]">
-                    <AccordionTrigger className="text-sm font-bold text-white hover:no-underline py-4">
-                      {item.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-xs text-white/50 leading-relaxed pb-4 italic border-t border-white/5 pt-3">
-                      "{item.answer}"
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          )}
         </div>
 
         {/* RIGHT COLUMN: ASSETS & TEAM (4/12) */}
-        <div className="lg:col-span-4 space-y-8 h-fit">
-          <DashCard title="The Vault" icon={Lock} subtitle="Data Room" locked={lockedSensitive} onUpgrade={handleUpgrade} className="p-8 h-fit">
-             <div className="space-y-3 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+        <div className="lg:col-span-4 space-y-8">
+          <DashCard title="The Vault" icon={Lock} subtitle="Data Room" locked={lockedSensitive ? "elite" : null} onUpgrade={handleUpgrade} className="p-8 h-[590px] flex flex-col justify-between">
+             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 mt-6">
                 {Object.entries(documents).filter(([_, val]) => hasValue(val)).map(([key, url]) => (
                    <a key={key} href={url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-[#01F27B]/30 hover:bg-white/10 transition-all group/doc">
                       <div className="flex items-center gap-4">
@@ -366,84 +385,66 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
              </div>
           </DashCard>
 
-          <DashCard title="Epic Playbook" icon={Layers} subtitle="Strategy" className="p-8 h-fit">
-             <div className="space-y-6">
-                <div className="space-y-2">
-                   <h4 className="text-[10px] font-black uppercase text-[#01F27B] tracking-widest">Business Model</h4>
-                   <p className="text-sm text-white/70 leading-relaxed italic">"{execution.businessModel || "How we generate value and sustainable revenue."}"</p>
-                </div>
-                <div className="w-full h-px bg-white/5" />
-                <div className="space-y-2">
-                   <h4 className="text-[10px] font-black uppercase text-[#01F27B] tracking-widest">Go-to-Market</h4>
-                   <p className="text-sm text-white/70 leading-relaxed">{execution.goToMarket}</p>
-                </div>
-             </div>
-          </DashCard>
 
-          <DashCard title="Execution Team" icon={Briefcase} subtitle="Key Humans" className="p-8 h-fit">
-             <div className="space-y-4">
-                {execution.team?.map((member, i) => (
-                   <div key={i} className="flex items-center gap-4 p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all group">
-                      <div className="w-12 h-12 rounded-xl bg-[#01F27B]/10 flex items-center justify-center text-[#01F27B] font-black text-lg border border-[#01F27B]/10 group-hover:bg-[#01F27B] group-hover:text-black transition-all">
-                        {member.name?.charAt(0) || "F"}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-md font-bold text-white truncate">{member.name}</p>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-white/30">{member.role || "Founder"}</p>
-                      </div>
-                   </div>
-                ))}
-             </div>
-          </DashCard>
 
-          <DashCard title="Use of Capital" icon={PieChart} subtitle="Epic Allocation" className="p-8 h-fit">
-             <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                   <div className="p-4 rounded-2xl bg-black/20 border border-white/5">
-                      <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Min Investment</p>
-                      <p className="text-md font-black text-white">{formatCurrency(funding?.minimumInvestment || activeDeal.minimumInvestment)}</p>
-                   </div>
-                   <div className="p-4 rounded-2xl bg-black/20 border border-white/5">
-                      <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Stage</p>
-                      <p className="text-md font-black text-white">{stage}</p>
-                   </div>
-                </div>
-                <div className="space-y-4 pt-2">
-                   {execution.useOfFunds?.map((item, i) => (
-                     <div key={i} className="space-y-2">
-                        <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-                           <span className="text-white/40">{item.category}</span>
-                           <span className="text-[#01F27B]">{item.percentage}%</span>
-                        </div>
-                        <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                           <div className="h-full bg-gradient-to-r from-[#01F27B] to-[#00d66d]" style={{ width: `${item.percentage}%` }} />
-                        </div>
-                     </div>
-                   ))}
-                </div>
-             </div>
-          </DashCard>
 
-          {/* MOBILE Q&A INTEGRATION (Appears last in mobile flow) */}
-          {activeDeal.execution?.qa?.length > 0 && (
-            <div className="block lg:hidden space-y-4 pt-8 border-t border-white/5">
-              <h4 className="text-[10px] font-black uppercase text-[#01F27B] tracking-[0.3em] mb-4 text-center">Founder Intelligence Q&A</h4>
-              <Accordion type="single" collapsible className="w-full space-y-3">
-                {activeDeal.execution.qa.map((item, i) => (
-                  <AccordionItem key={i} value={`qm-${i}`} className="border-white/5 bg-white/[0.02] rounded-2xl overflow-hidden px-5 transition-all hover:bg-white/[0.04]">
-                    <AccordionTrigger className="text-sm font-bold text-white hover:no-underline py-4 text-left">
-                      {item.question}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-xs text-white/50 leading-relaxed pb-4 italic border-t border-white/5 pt-3">
-                      "{item.answer}"
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            </div>
-          )}
+
         </div>
 
+      </div>
+
+      {/* ─── SECONDARY GRID: USE OF CAPITAL & Q&A ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mt-8">
+         {/* USE OF CAPITAL (6/12) */}
+         <div className={cn("flex flex-col", normalizedExecution.qa?.length > 0 ? "lg:col-span-6" : "lg:col-span-12")}>
+            <DashCard title="Use of Capital" icon={PieChart} subtitle="Epic Allocation" locked={lockedPremium ? "pro" : null} onUpgrade={handleUpgrade} className="p-8 h-full">
+               <div className="space-y-6 mt-4">
+                  <div className="grid grid-cols-2 gap-4">
+                     <div className="p-4 rounded-2xl bg-black/20 border border-white/5">
+                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Min Investment</p>
+                        <p className="text-md font-black text-white">{formatCurrency(funding?.minimumInvestment || activeDeal.minimumInvestment)}</p>
+                     </div>
+                     <div className="p-4 rounded-2xl bg-black/20 border border-white/5">
+                        <p className="text-[10px] font-black text-white/20 uppercase tracking-widest mb-1">Stage</p>
+                        <p className="text-md font-black text-white">{stage}</p>
+                     </div>
+                  </div>
+                  <div className="space-y-4 pt-2">
+                     {displayUseOfFunds?.map((item, i) => (
+                       <div key={i} className="space-y-2">
+                          <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
+                             <span className="text-white/40">{item.category}</span>
+                             <span className="text-[#01F27B]">{item.percentage}%</span>
+                          </div>
+                          <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
+                             <div className="h-full bg-gradient-to-r from-[#01F27B] to-[#00d66d]" style={{ width: `${item.percentage}%` }} />
+                          </div>
+                       </div>
+                     ))}
+                  </div>
+               </div>
+            </DashCard>
+         </div>
+
+         {/* Q&A INTEGRATION (6/12) */}
+         {normalizedExecution.qa?.length > 0 && (
+           <div className="lg:col-span-6 flex flex-col">
+             <DashCard title="Founder Q&A" icon={MessageSquare} subtitle="Intelligence Stream" className="p-8 h-full">
+               <Accordion type="single" collapsible className="w-full space-y-3 mt-4">
+                 {normalizedExecution.qa.map((item, i) => (
+                   <AccordionItem key={i} value={`qd-${i}`} className="border-white/5 bg-white/[0.02] rounded-2xl overflow-hidden px-5 transition-all hover:bg-white/[0.04]">
+                     <AccordionTrigger className="text-sm font-bold text-white hover:no-underline py-4 text-left">
+                       {item.question}
+                     </AccordionTrigger>
+                     <AccordionContent className="text-xs text-white/50 leading-relaxed pb-4 italic border-t border-white/5 pt-3">
+                       "{item.answer}"
+                     </AccordionContent>
+                   </AccordionItem>
+                 ))}
+               </Accordion>
+             </DashCard>
+           </div>
+         )}
       </div>
 
       {/* ─── FOUNDER FOOTER ACTION (SUBMIT FOR REVIEW) ─── */}
@@ -473,22 +474,22 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
       {!isFounder && (
         <div className="flex flex-col md:flex-row items-center justify-between gap-10 p-10 bg-gradient-to-br from-black via-white/[0.04] to-black border border-white/10 rounded-[3rem] text-center md:text-left shadow-2xl relative overflow-hidden">
            <div className="space-y-3 relative z-10">
-             <h3 className="text-2xl font-black text-white tracking-tighter">Due Diligence & Participation</h3>
+             <h3 className="text-2xl font-black text-white tracking-tighter">Conduit to the Founder</h3>
              <p className="text-md text-white/40 max-w-2xl leading-relaxed">
-               Request access to the full data room for a deep dive into the business model, financials, and verified traction metrics.
+               Establish direct alignment with the founders. Initiate direct communication channels to discuss execution, request bespoke due diligence, or secure your allocation in this high-momentum round.
              </p>
            </div>
            <div className="flex flex-col sm:flex-row gap-4 shrink-0 relative z-10">
-              {lockedPremium ? (
-                <Button 
-                  onClick={handleUpgrade}
-                  className="bg-white/5 hover:bg-white/10 text-white rounded-2xl px-10 h-14 border border-white/10 font-bold transition-all flex items-center gap-3 group"
-                >
-                  <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)] group-hover:bg-amber-500/20 transition-all">
-                    <Lock className="w-4 h-4 text-amber-500" />
-                  </div>
-                  Message Founders
-                </Button>
+               {lockedSensitive ? (
+                 <Button 
+                   onClick={handleUpgrade}
+                   className="bg-white/5 hover:bg-white/10 text-white rounded-2xl px-10 h-14 border border-white/10 font-bold transition-all flex items-center gap-3 group"
+                 >
+                   <div className="w-8 h-8 rounded-xl bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)] group-hover:bg-amber-500/20 transition-all">
+                     <Lock className="w-4 h-4 text-amber-500" />
+                   </div>
+                   Upgrade to Elite to Message Founder
+                 </Button>
               ) : (
                 <div className="flex items-center gap-2 bg-white/5 border border-white/10 p-1.5 rounded-[1.2rem] shadow-inner">
                   <Button 
