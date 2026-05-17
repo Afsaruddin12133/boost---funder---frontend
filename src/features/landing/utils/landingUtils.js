@@ -8,8 +8,8 @@
  * @returns {string} Formatted currency string
  */
 export const formatCurrency = (num) => {
-  if (num === undefined || num === null) return "$0K";
-  return `$${(num / 1000).toFixed(0)}K`;
+  if (num === undefined || num === null) return "AED 0K";
+  return `AED ${(num / 1000).toFixed(0)}K`;
 };
 
 /**

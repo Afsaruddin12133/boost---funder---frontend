@@ -111,7 +111,7 @@ export default function DealCard({
               </div>
             )}
 
-            <div className="flex justify-between items-end px-1">
+            <div className="flex justify-between items-end gap-4 flex-wrap px-1">
               <div className="space-y-0.5">
                 <span className="block text-[9px] font-black text-white/20 uppercase tracking-widest">Raised</span>
                 <span className="text-base font-black text-white">
@@ -127,7 +127,7 @@ export default function DealCard({
             </div>
 
             {/* User-Friendly Progress Label */}
-            <div className="flex justify-between items-end px-1">
+            <div className="flex justify-between items-end gap-2 flex-wrap px-1">
               <div className="flex items-center gap-2">
                 <span className={`text-[9px] font-black uppercase tracking-widest ${isDraft ? 'text-amber-500/60' : isPending ? 'text-blue-500/60' : 'text-white/20'}`}>Deal Setup</span>
                 <span className={`w-1 h-1 rounded-full ${isDraft ? 'bg-amber-500/30' : isPending ? 'bg-blue-500/30' : 'bg-[#01F27B]/30'}`} />

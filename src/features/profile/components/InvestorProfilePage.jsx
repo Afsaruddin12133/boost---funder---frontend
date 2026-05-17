@@ -295,7 +295,7 @@ export default function InvestorProfilePage() {
               </div>
               <div className="flex items-center gap-2 px-4 py-2 bg-white/5 rounded-xl border border-white/5">
                 <Briefcase className="w-4 h-4 text-[#01F27B]" />
-                <span className="text-sm font-bold text-white/80">{d.minInvestment ? `$${Number(d.minInvestment).toLocaleString()} Min` : "Venture Capital"}</span>
+                <span className="text-sm font-bold text-white/80">{d.minInvestment ? `د.إ ${Number(d.minInvestment).toLocaleString()} Min` : "Venture Capital"}</span>
               </div>
             </div>
           </div>
@@ -337,13 +337,13 @@ export default function InvestorProfilePage() {
         <div className="lg:col-span-4 space-y-8">
           <Section icon={Target} title="Investment Strategy">
             <div className="space-y-6">
-              <InputGroup label="Min Investment ($)" icon={DollarSign}>
+              <InputGroup label="Min Investment (AED)" icon={DollarSign}>
                 {editing ? <PremiumInput type="number" value={form.minInvestment} onChange={(v) => setForm(f => ({...f, minInvestment: v}))} placeholder="10000" />
-                         : <ViewBox value={d.minInvestment ? `$${Number(d.minInvestment).toLocaleString()}` : null} />}
+                         : <ViewBox value={d.minInvestment ? `د.إ ${Number(d.minInvestment).toLocaleString()}` : null} />}
               </InputGroup>
-              <InputGroup label="Max Investment ($)" icon={DollarSign}>
+              <InputGroup label="Max Investment (AED)" icon={DollarSign}>
                 {editing ? <PremiumInput type="number" value={form.maxInvestment} onChange={(v) => setForm(f => ({...f, maxInvestment: v}))} placeholder="100000" />
-                         : <ViewBox value={d.maxInvestment ? `$${Number(d.maxInvestment).toLocaleString()}` : null} />}
+                         : <ViewBox value={d.maxInvestment ? `د.إ ${Number(d.maxInvestment).toLocaleString()}` : null} />}
               </InputGroup>
               <InputGroup label="Preferred Sectors" icon={Tag}>
                 {editing ? (

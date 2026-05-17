@@ -20,10 +20,10 @@ import { useBookmark } from "../hooks/useBookmark";
 import { useSavedDeals } from "../hooks/useSavedDeals";
 
 export default function ExploreDealCard({ deal }) {
-  const rawProgress = calculateProgress(
-    deal.raisedAmount || deal.fundingInfo?.raisedAmount || 0,
-    deal.goalAmount || deal.fundingInfo?.goalAmount || 0
-  );
+  const raisedAmount = deal.raisedAmount || deal.funding?.raisedAmount || deal.fundingInfo?.raisedAmount || 0;
+  const goalAmount = deal.goalAmount || deal.funding?.goalAmount || deal.fundingInfo?.goalAmount || deal.fundingGoal || 0;
+
+  const rawProgress = calculateProgress(raisedAmount, goalAmount);
   const navigate = useNavigate();
   
   const handleNavigate = (e) => {
@@ -37,8 +37,6 @@ export default function ExploreDealCard({ deal }) {
   const startupName = deal.startupName || deal.basicInfo?.startupName || "Untitled Startup";
   const startupLogo = deal.startupLogo || deal.basicInfo?.startupLogo;
   const category = deal.category || deal.basicInfo?.category || "TECH";
-  const raisedAmount = deal.raisedAmount || deal.fundingInfo?.raisedAmount || 0;
-  const goalAmount = deal.goalAmount || deal.fundingInfo?.goalAmount || 0;
   const pitch = deal.pitch || deal.basicInfo?.startupDescription || deal.basicInfo?.pitch || "";
 
   const serverIsSaved = React.useMemo(() => {

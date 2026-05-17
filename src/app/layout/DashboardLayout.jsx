@@ -1,22 +1,4 @@
 import {
-  Bookmark,
-  Briefcase,
-  Building,
-  Compass,
-  CreditCard,
-  LayoutDashboard,
-  LineChart,
-  LogOut,
-  Plus,
-  Rocket,
-  Search,
-  Settings,
-  ShieldCheck,
-  TrendingUp,
-  User,
-  ChevronDown
-} from "lucide-react";
-import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -24,14 +6,32 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/shared/ui/dropdown-menu";
+import {
+  Bookmark,
+  Briefcase,
+  Building,
+  ChevronDown,
+  Compass,
+  CreditCard,
+  LayoutDashboard,
+  LineChart,
+  LogOut,
+  Plus,
+  Search,
+  Settings,
+  ShieldCheck,
+  User
+} from "lucide-react";
 import { useEffect, useRef } from "react";
 import toast from "react-hot-toast";
 import { useLocation, useNavigate, useSearchParams } from "react-router";
 
 import { useAuth } from "@/features/auth/hooks/useAuth";
-import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
-import { useInvestorVerificationStatus } from "@/features/verification/hooks/useInvestorVerification";
 import { useActiveSubscription } from "@/features/subscription/hooks/useSubscription";
+import { useInvestorVerificationStatus } from "@/features/verification/hooks/useInvestorVerification";
+import { useVerificationStatus } from "@/features/verification/hooks/useVerification";
+import Logo from "@/shared/components/Logo";
+import SiteFooter from "@/shared/components/SiteFooter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/shared/ui/avatar";
 import { Button } from "@/shared/ui/button";
 import { Input } from "@/shared/ui/input";
@@ -48,8 +48,6 @@ import {
   SidebarTrigger,
   useSidebar
 } from "@/shared/ui/sidebar";
-import Logo from "@/shared/components/Logo";
-import SiteFooter from "@/shared/components/SiteFooter";
 
 function SidebarNavContent({ navItems, currentPath, navigateRouter, onLogout, userRole }) {
   const { setOpenMobile } = useSidebar();
@@ -324,10 +322,12 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
         {/* Main Content Area - Independently Scrollable */}
         <main ref={mainRef} className="flex-1 overflow-y-auto p-4 md:p-5 custom-scrollbar">
           <div className="max-w-[1600px] mx-auto min-h-full flex flex-col">
-            <div className="flex-1">
+            <div className="flex-1 pb-2 md:pb-4">
               {children}
             </div>
-            <SiteFooter onNavigate={onNavigate} />
+            <div className="pt-12 md:pt-16 border-t border-white/5">
+              <SiteFooter onNavigate={onNavigate} />
+            </div>
           </div>
         </main>
       </SidebarInset>

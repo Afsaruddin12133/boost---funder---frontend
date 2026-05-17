@@ -153,12 +153,20 @@ export default function DealList({ onNavigate, onEdit, onView, onCreate, compact
     );
   }
 
+  const isOnlyOne = currentDeals.length === 1;
+  const gridClasses = compact
+    ? "grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8"
+    : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12";
+
   return (
     <div className="w-full flex flex-col gap-12">
-      {/* 3x2 Grid for Zero-Scroll Experience */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 lg:gap-12">
+      {/* Dynamic Symmetrical Grid for Zero-Scroll Experience */}
+      <div className={gridClasses}>
         {currentDeals.map((deal) => (
-          <div key={deal.id ?? deal._id} className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div 
+            key={deal.id ?? deal._id} 
+            className={`animate-in fade-in slide-in-from-bottom-4 duration-500 h-full ${compact && isOnlyOne ? "col-span-full" : ""}`}
+          >
             <DealCard
               deal={deal}
               onNavigate={onNavigate}

@@ -25,8 +25,6 @@ dist-ssr/
 *.sw?
 
 # Env files
-.env
-.env.*
 !.env.example
 
 # Temporary/Cache files
@@ -39,3 +37,4 @@ dist-ssr/
 # Build files
 coverage/
 build/
+config.bat

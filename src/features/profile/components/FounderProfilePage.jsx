@@ -322,7 +322,7 @@ export default function FounderProfilePage() {
           <Section icon={TrendingUp} title="Quick Stats">
             <div className="grid grid-cols-1 gap-4">
               <StatCard icon={Users} label="Team Size" value={d.teamSize ? `${d.teamSize} Experts` : "Solo Founder"} />
-              <StatCard icon={DollarSign} label="Funding Goal" value={d.fundingGoal ? `$${Number(d.fundingGoal).toLocaleString()}` : "Not Disclosed"} />
+              <StatCard icon={DollarSign} label="Funding Goal" value={d.fundingGoal ? `د.إ ${Number(d.fundingGoal).toLocaleString()}` : "Not Disclosed"} />
               <StatCard icon={Rocket} label="Startup Stage" value={d.startupStage || "Exploration"} />
             </div>
           </Section>

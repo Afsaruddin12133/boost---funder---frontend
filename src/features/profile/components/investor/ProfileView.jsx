@@ -71,7 +71,7 @@ export default function ProfileView({ profile }) {
               <DollarSign className="w-4 h-4" /> Min Investment Check
             </p>
             <p className="text-2xl font-bold text-[#01F27B]">
-              {formatCurrency(preferences.minInvestment || 0)}
+              {preferences.minInvestment ? `د.إ ${Number(preferences.minInvestment).toLocaleString()}` : "د.إ 0"}
             </p>
           </div>
           <div className="bg-white/5 p-4 rounded-xl border border-white/5">
@@ -79,7 +79,7 @@ export default function ProfileView({ profile }) {
               <DollarSign className="w-4 h-4" /> Max Investment Check
             </p>
             <p className="text-2xl font-bold text-[#01F27B]">
-              {formatCurrency(preferences.maxInvestment || 0)}
+              {preferences.maxInvestment ? `د.إ ${Number(preferences.maxInvestment).toLocaleString()}` : "د.إ 0"}
             </p>
           </div>
         </div>

@@ -10,25 +10,26 @@ import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import {
-    CheckCircle, Clock,
-    Eye,
-    FileText,
-    Plus,
-    Rocket,
-    ShieldCheck,
-    TrendingUp,
-    User,
-    Zap
+  CheckCircle, Clock,
+  Eye,
+  FileText,
+  Plus,
+  Rocket,
+  ShieldCheck,
+  TrendingUp,
+  User,
+  Zap
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { Navigate, Route, Routes, useLocation, useSearchParams } from "react-router";
 import {
-    Bar,
-    BarChart,
-    ResponsiveContainer,
-    Tooltip,
-    XAxis
+  Bar,
+  BarChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  CartesianGrid
 } from "recharts";
 import SettingsPage from "./SettingsPage";
 
@@ -202,36 +203,76 @@ function ProfileSection({ user, onNavigate }) {
 
 function AnalyticsSection() {
   return (
-    <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-4 flex flex-col justify-between h-full relative overflow-hidden group">
-      <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-[#01F27B]/5 rounded-full blur-[80px] pointer-events-none" />
+    <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-5 flex flex-col justify-between h-full relative overflow-hidden group hover:border-[#01F27B]/20 transition-all duration-500 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.37)]">
+      {/* Background Accent Glow */}
+      <div className="absolute -bottom-20 -left-20 w-48 h-48 bg-[#01F27B]/5 rounded-full blur-[80px] pointer-events-none group-hover:bg-[#01F27B]/10 transition-all duration-700" />
+      <div className="absolute top-0 left-0 w-full h-[1.5px] bg-gradient-to-r from-transparent via-[#01F27B]/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
       
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="font-bold text-white text-lg lg:text-xl tracking-tight">Performance</h3>
-        <span className="text-[10px] lg:text-[12px] font-black uppercase tracking-widest text-white/30 bg-white/5 px-2 py-0.5 rounded-full border border-white/5">Weekly</span>
-      </div>
-      
-      <div className="flex-1 min-h-[100px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={analyticsData}>
-            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{fill: '#ffffff20', fontSize: 9, fontWeight: 700}} dy={10} />
-            <Tooltip 
-              cursor={{fill: '#ffffff05'}}
-              contentStyle={{backgroundColor: 'rgba(12,12,12,0.95)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '12px'}}
-            />
-            <Bar dataKey="views" fill="#ffffff10" radius={[3, 3, 0, 0]} activeBar={{ fill: '#01F27B' }} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div>
+        <div className="flex justify-between items-center mb-5">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-[#01F27B] animate-pulse" />
+            <h3 className="font-black text-white text-base lg:text-lg tracking-tight">Performance</h3>
+          </div>
+          <span className="text-[9px] font-black uppercase tracking-widest text-[#01F27B] bg-[#01F27B]/10 px-2.5 py-0.5 rounded-full border border-[#01F27B]/20 shadow-[0_0_10px_rgba(1,242,123,0.1)]">
+            Weekly
+          </span>
+        </div>
+        
+        {/* Stable Chart Wrapper to prevent ResponsiveContainer from collapsing */}
+        <div className="h-[140px] w-full relative -ml-1 pr-1">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={analyticsData} margin={{ top: 10, right: 5, left: 5, bottom: 5 }}>
+              <defs>
+                <linearGradient id="barViewsGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#01F27B" stopOpacity={0.85} />
+                  <stop offset="100%" stopColor="#01F27B" stopOpacity={0.05} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.03)" />
+              <XAxis 
+                dataKey="name" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 8, fontWeight: 800, letterSpacing: '0.05em' }} 
+                dy={6} 
+              />
+              <Tooltip 
+                cursor={{ fill: 'rgba(255,255,255,0.02)', radius: 4 }}
+                contentStyle={{
+                  backgroundColor: 'rgba(10,10,10,0.95)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '12px',
+                  fontSize: '11px',
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)',
+                  color: '#fff'
+                }}
+                labelStyle={{ fontWeight: '800', color: 'rgba(255,255,255,0.4)', marginBottom: '4px' }}
+                itemStyle={{ color: '#01F27B', fontWeight: '900' }}
+              />
+              <Bar 
+                dataKey="views" 
+                fill="url(#barViewsGradient)" 
+                radius={[4, 4, 0, 0]} 
+                maxBarSize={28}
+                activeBar={{ fill: '#01F27B', filter: 'drop-shadow(0px 0px 8px rgba(1,242,123,0.5))' }}
+              />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
-      <div className="mt-4 flex justify-between items-center bg-white/5 p-2 rounded-lg border border-white/5">
+      <div className="mt-5 flex justify-between items-center bg-white/[0.02] border border-white/5 p-3 rounded-xl hover:bg-white/[0.04] transition-colors duration-300">
         <div>
-          <p className="text-[8px] lg:text-[10px] font-bold text-white/40 uppercase tracking-widest mb-0.5">Peak Traffic</p>
+          <p className="text-[8px] font-black text-white/30 uppercase tracking-widest mb-0.5">Peak Traffic</p>
           <div className="flex items-baseline gap-1">
-            <span className="text-lg lg:text-2xl font-black text-white">245</span>
-            <span className="text-[8px] lg:text-[10px] font-black text-[#01F27B] uppercase tracking-widest">Views</span>
+            <span className="text-xl lg:text-2xl font-black text-white tracking-tight">245</span>
+            <span className="text-[8px] font-black text-[#01F27B] uppercase tracking-widest">Views / Day</span>
           </div>
         </div>
-        <TrendingUp className="w-3.5 h-3.5 text-[#01F27B]" />
+        <div className="w-8 h-8 rounded-lg bg-[#01F27B]/10 flex items-center justify-center border border-[#01F27B]/20 shadow-[0_0_15px_rgba(1,242,123,0.15)] animate-pulse">
+          <TrendingUp className="w-4 h-4 text-[#01F27B]" />
+        </div>
       </div>
     </Card>
   );
@@ -376,7 +417,7 @@ function MainDashboard({ verStatus, user, onNavigate, onView, onCreate }) {
 
         {/* Middle Column: Recent Activity */}
         <div className="md:col-span-2 lg:col-span-8 xl:col-span-6 flex flex-col gap-4 order-3 xl:order-2 min-h-[400px]">
-          <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-4 lg:p-6 flex flex-col h-full relative overflow-hidden">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 p-4 lg:p-6 flex flex-col min-h-[632px] relative overflow-hidden">
             <div className="flex justify-between items-center mb-6">
               <h3 className="font-bold text-white text-lg tracking-tight">Recent Activity</h3>
               <Button 
@@ -388,7 +429,7 @@ function MainDashboard({ verStatus, user, onNavigate, onView, onCreate }) {
               </Button>
             </div>
             
-            <div className="flex-1 space-y-4">
+            <div className="flex-1 overflow-y-auto max-h-[510px] pr-2 -mr-2 custom-scrollbar">
               <DealList compact onNavigate={onNavigate} onView={onView} onCreate={onCreate} />
             </div>
           </Card>

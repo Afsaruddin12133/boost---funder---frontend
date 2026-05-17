@@ -26,13 +26,13 @@ export default function Step4Execution({ data, onChange, errors }) {
       <div className="space-y-5">
         <Field label="Current ARR / Revenue (AED)" icon={Zap} error={errors.revenue} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-[10px]">AED</span>
             <Input
               type="number"
               placeholder="120000"
               value={data.revenue || ""}
               onChange={(e) => onChange("revenue", e.target.value)}
-              className="pl-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+              className="pl-10 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
             />
           </div>
         </Field>
@@ -40,7 +40,7 @@ export default function Step4Execution({ data, onChange, errors }) {
         <Field label="Business Model" icon={Briefcase} error={errors.businessModel} required>
           <textarea
             rows={3}
-            placeholder="How do you make money? (e.g. B2B SaaS, $99/mo subscription)"
+            placeholder="How do you make money? (e.g. B2B SaaS, AED 350/mo subscription)"
             value={data.businessModel || ""}
             onChange={(e) => onChange("businessModel", e.target.value)}
             className="w-full rounded-xl bg-white/5 border border-white/10 text-white placeholder:text-white/30 focus:outline-none focus:border-[#01F27B]/50 px-3 py-3 text-sm resize-none"

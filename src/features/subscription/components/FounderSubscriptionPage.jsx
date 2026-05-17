@@ -111,7 +111,7 @@ function FounderPackageCard({ pkg, isSelected, onSelect, calculatedFee, isCalcul
           ) : calculatedFee !== undefined && (
             <div className="bg-[#01F27B]/10 border border-[#01F27B]/20 rounded-xl p-3 flex items-center justify-between shadow-[0_0_15px_rgba(1,242,123,0.1)]">
               <span className="text-[10px] uppercase font-black tracking-widest text-[#01F27B]">Total Fees : </span>
-              <span className="text-lg font-black text-white">${calculatedFee.toLocaleString('en-US')}</span>
+              <span className="text-lg font-black text-white">AED {calculatedFee.toLocaleString('en-US')}</span>
             </div>
           )}
           {pkg.approvalTime && (
@@ -381,10 +381,6 @@ export default function FounderSubscriptionPage() {
       {/* Premium Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/5 pb-4 md:pb-6">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-[#01F27B] animate-pulse" />
-            <span className="text-[9px] font-black text-[#01F27B] uppercase tracking-[0.3em]">Founder Plans</span>
-          </div>
           <h1 className="text-3xl md:text-5xl font-black text-white tracking-tighter uppercase italic leading-none">
             Choose your <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#01F27B] to-[#00d66d]">Package</span>
           </h1>
@@ -399,7 +395,6 @@ export default function FounderSubscriptionPage() {
             Test Funding Goal
           </label>
           <div className="relative">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50 font-bold text-sm">$</span>
             <input 
               type="text"
               value={fundingGoalInput}
@@ -414,7 +409,7 @@ export default function FounderSubscriptionPage() {
                   setFundingGoalInput(fundingGoalInput);
                 }
               }}
-              placeholder="e.g. 1,000,000"
+              placeholder="AED 1,000,000"
               disabled={!!dealIdFromUrl}
               className={`w-full sm:w-64 h-12 bg-[#0c0c0c] border border-white/10 rounded-xl pl-8 pr-4 text-white font-bold tracking-tight focus:border-[#01F27B]/50 focus:ring-1 focus:ring-[#01F27B]/50 transition-all placeholder:text-white/20 shadow-inner ${dealIdFromUrl ? 'opacity-50 cursor-not-allowed' : ''}`}
             />

@@ -1,7 +1,7 @@
 import { Badge } from "@/shared/ui/badge";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { Check, Crown, Rocket, Zap, ChevronRight } from "lucide-react";
+import { Check, ChevronRight, Crown, Rocket, Zap } from "lucide-react";
 
 const PLAN_ICONS = {
   free: Rocket,
@@ -90,7 +90,7 @@ export default function PricingCard({ plan, currentPlan, isGuest, onUpgrade }) {
 
         {/* Pricing Section */}
         <div className="mb-6 flex items-baseline gap-1">
-          <span className="text-5xl font-black text-white italic tracking-tighter group-hover:scale-110 transition-transform duration-500 origin-left">${plan.price}</span>
+          <span className="text-5xl font-black text-white italic tracking-tighter group-hover:scale-110 transition-transform duration-500 origin-left">AED {plan.price}</span>
           <span className="text-[11px] font-black text-white/40 uppercase tracking-widest">/ {plan.duration}</span>
         </div>
 

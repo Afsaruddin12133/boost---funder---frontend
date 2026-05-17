@@ -152,7 +152,7 @@ export default function ProfileForm({ initialData, onSave, onCancel, isSaving })
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="space-y-2">
-            <label className="text-sm text-white/70 font-medium">Min Investment ($)</label>
+            <label className="text-sm text-white/70 font-medium">Min Investment (AED)</label>
             <input 
               type="number" 
               value={formData.investmentPreferences.minInvestment} 
@@ -163,7 +163,7 @@ export default function ProfileForm({ initialData, onSave, onCancel, isSaving })
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-white/70 font-medium">Max Investment ($)</label>
+            <label className="text-sm text-white/70 font-medium">Max Investment (AED)</label>
             <input 
               type="number" 
               value={formData.investmentPreferences.maxInvestment} 

@@ -25,39 +25,39 @@ export default function Step3Funding({ data, onChange, errors }) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <Field label="Goal Amount (AED)" icon={DollarSign} error={errors.goalAmount} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-[10px]">AED</span>
             <Input
               type="number"
               placeholder="500000"
               value={data.goalAmount || ""}
               onChange={(e) => onChange("goalAmount", e.target.value)}
-              className="pl-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+              className="pl-10 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
             />
           </div>
         </Field>
 
         <Field label="Raised Amount (AED)" icon={DollarSign} error={errors.raisedAmount} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-[10px]">AED</span>
             <Input
               type="number"
               placeholder="100000"
               value={data.raisedAmount || ""}
               onChange={(e) => onChange("raisedAmount", e.target.value)}
-              className="pl-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+              className="pl-10 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
             />
           </div>
         </Field>
 
         <Field label="Minimum Investment (AED)" icon={DollarSign} error={errors.minimumInvestment} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-[10px]">AED</span>
             <Input
               type="number"
               placeholder="1000"
               value={data.minimumInvestment || ""}
               onChange={(e) => onChange("minimumInvestment", e.target.value)}
-              className="pl-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+              className="pl-10 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
             />
           </div>
         </Field>
@@ -97,24 +97,24 @@ export default function Step3Funding({ data, onChange, errors }) {
 
         <Field label="CAC (Customer Acquisition Cost)" icon={Target} error={errors.CAC} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-[10px]">AED</span>
             <Input
               placeholder="120"
               value={data.CAC || ""}
               onChange={(e) => onChange("CAC", e.target.value)}
-              className="pl-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+              className="pl-10 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
             />
           </div>
         </Field>
 
         <Field label="LTV (Lifetime Value)" icon={TrendingUp} error={errors.LTV} required>
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40">$</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40 text-[10px]">AED</span>
             <Input
               placeholder="900"
               value={data.LTV || ""}
               onChange={(e) => onChange("LTV", e.target.value)}
-              className="pl-8 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
+              className="pl-10 bg-white/5 border-white/10 text-white focus:border-[#01F27B]/50 h-11 rounded-xl"
             />
           </div>
         </Field>

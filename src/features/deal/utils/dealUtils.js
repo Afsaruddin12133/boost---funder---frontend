@@ -41,14 +41,15 @@ export const calculateProgress = (raisedAmount, goalAmount) => {
   return Math.min(raised / goal, 1);
 };
 
-export const formatCurrency = (amount, currency = "USD") => {
+export const formatCurrency = (amount, currency = "AED") => {
   const number = Number(amount);
   if (!Number.isFinite(number)) return "—";
-  return new Intl.NumberFormat("en-US", {
+  const formatted = new Intl.NumberFormat("en-US", {
     style: "currency",
     currency,
     maximumFractionDigits: 0,
   }).format(number);
+  return formatted.replace("$", "د.إ ");
 };
 
 export const formatDate = (value) => {
