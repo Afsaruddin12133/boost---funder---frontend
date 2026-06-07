@@ -107,7 +107,10 @@ function OverviewCards({ verStatus, user, onNavigate }) {
 
 function InvestorProfileCard({ user, onNavigate, savedDealsData }) {
   const displayName = `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || "Elite Investor";
-  const plan = user?.subscription?.plan || 'Free';
+  const plan = (() => {
+    const p = user?.subscription?.plan || 'Elite';
+    return p.charAt(0).toUpperCase() + p.slice(1);
+  })();
   const bio = user?.profile?.bio || "Active investor looking for high-growth tech startups. Portfolio focus: AI, SaaS, and Fintech.";
   const location = user?.profile?.location || "Global Capital";
   const isVerified = user?.isVerified === true;

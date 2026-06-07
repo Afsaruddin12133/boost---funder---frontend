@@ -161,11 +161,10 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
       });
       if (data.startupLogo instanceof File) fd.append("startupLogo", data.startupLogo);
 
-      // Backend might require fundingGoal to initialize deal depending on package state
-      const goal = data.goalAmount || localStorage.getItem('founderFundingGoal');
-      if (goal) {
-        fd.append("fundingGoal", String(goal).replace(/[^\d.-]/g, ""));
-      }
+      // Always send fundingGoal > 0 — backend requires it. Use 1 as static fallback.
+      const rawGoal = data.goalAmount || localStorage.getItem('founderFundingGoal');
+      const parsedGoal = Number(String(rawGoal || "").replace(/[^\d.-]/g, ""));
+      fd.append("fundingGoal", String(parsedGoal > 0 ? parsedGoal : 1));
 
       return { isFormData: true, payload: fd };
     }
@@ -189,10 +188,8 @@ export default function CreateDealWizard({ onSuccess, onCancel, initialData }) {
       if (data.deadline) payload.deadline = data.deadline;
       if (data.CHURN) payload.CHURN = String(data.CHURN);
 
-      // Ensure fundingGoal is strictly set for the backend requirement
-      if (payload.goalAmount) {
-        payload.fundingGoal = payload.goalAmount;
-      }
+      // Always send fundingGoal > 0 — backend requires it. Use 1 as static fallback.
+      payload.fundingGoal = payload.goalAmount && payload.goalAmount > 0 ? payload.goalAmount : 1;
 
       return { isFormData: false, payload };
     }

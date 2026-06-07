@@ -268,7 +268,10 @@ export default function DashboardLayout({ children, userRole, onNavigate, onLogo
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-[#01F27B] animate-pulse" />
                       <span className="text-[10px] text-[#01F27B]/70 font-black uppercase tracking-widest group-hover:text-[#01F27B] transition-colors">
-                        {(authUser?.subscription?.plan || 'Free')} Plan
+                        {(() => {
+                          const p = authUser?.subscription?.plan || 'Elite';
+                          return p.charAt(0).toUpperCase() + p.slice(1);
+                        })()} Plan
                       </span>
                     </div>
                   </div>

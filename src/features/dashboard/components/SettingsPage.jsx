@@ -257,13 +257,10 @@ export default function SettingsPage() {
                     </div>
                     <div className="relative z-10 space-y-4">
                       <p className="text-[10px] font-black text-[#01F27B] uppercase tracking-[0.2em]">Current Plan</p>
-                      <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic">Free Starter</h3>
+                      <h3 className="text-3xl font-black text-white tracking-tighter uppercase italic">Elite Plan</h3>
                       <p className="text-white/50 text-sm max-w-sm">
-                        You are currently on the Free plan. Upgrade to unlock premium features and accelerate your funding journey.
+                        You are on the Elite plan. All premium features, strategic data vault, and detailed traction analytics are fully unlocked.
                       </p>
-                      <Button className="bg-white text-black font-black hover:bg-white/90 rounded-xl px-8 h-12 transition-all shadow-[0_10px_20px_rgba(255,255,255,0.1)]">
-                        Upgrade to Pro
-                      </Button>
                     </div>
                   </Card>
 

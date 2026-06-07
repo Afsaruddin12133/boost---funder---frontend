@@ -1,10 +1,11 @@
 export const getPlanFlags = (plan) => {
-  const normalized = String(plan || "free").toLowerCase();
+  // Force plan to 'elite' so that all users can explore everything.
+  const normalized = "elite";
   return {
     plan: normalized,
-    isFree: normalized === "free",
-    isPro: normalized === "pro",
-    isElite: normalized === "elite",
+    isFree: false,
+    isPro: false,
+    isElite: true,
   };
 };
 
@@ -27,13 +28,7 @@ export const hasValue = (value) => {
 };
 
 export const normalizePlan = (subscription) => {
-  const raw = subscription?.plan ?? subscription?.tier ?? subscription?.name ?? "free";
-  if (typeof raw === "string") return raw.toLowerCase();
-  if (typeof raw === "object" && raw !== null) {
-    const fromObj = raw.name ?? raw.tier ?? raw.plan ?? "free";
-    return String(fromObj).toLowerCase();
-  }
-  return "free";
+  return "elite";
 };
 
 export const computeProgress = (raised, goal) => {
