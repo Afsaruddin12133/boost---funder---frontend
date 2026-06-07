@@ -76,7 +76,6 @@ function MarketStrategyCard({ title, content, locked, onUpgrade }) {
 }
 
 export function MarketStrategySection({ story, execution, topCompetitor, lockedPremium, onUpgrade }) {
-  console.log(topCompetitor);
   
   const cards = [
     { title: "Target Market", content: story?.targetMarket },

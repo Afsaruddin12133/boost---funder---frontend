@@ -156,7 +156,6 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
   }
 
   if (!activeDeal) return null;
-  console.log("activeDeal", activeDeal)
   const basicInfo = activeDeal.basicInfo || {};
   const execution = activeDeal.execution || {};
   const funding = activeDeal.funding || {};
@@ -175,21 +174,13 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
     topCompetitor: execution.topCompetitor || activeDeal.topCompetitor || story?.topCompetitor,
   };
 
-  const displayTeam = (lockedPremium || !normalizedExecution.team?.length)
-    ? [
-      { name: "Sarah Jenkins", role: "Chief Executive Officer" },
-      { name: "Dr. Alex Rivera", role: "Chief Technology Officer" },
-      { name: "Michael Chen", role: "Head of Growth" },
-    ]
-    : normalizedExecution.team;
+  const displayTeam = normalizedExecution.team?.length
+    ? normalizedExecution.team
+    : [];
 
-  const displayUseOfFunds = (lockedPremium || !normalizedExecution.useOfFunds?.length)
-    ? [
-      { category: "Product Development", percentage: 45 },
-      { category: "Marketing & Scaling", percentage: 30 },
-      { category: "Operations & Legal", percentage: 25 },
-    ]
-    : normalizedExecution.useOfFunds;
+  const displayUseOfFunds = normalizedExecution.useOfFunds?.length
+    ? normalizedExecution.useOfFunds
+    : [];
 
   const name = basicInfo.startupName || activeDeal.startupName || "The Startup";
   const tagline = basicInfo.tagline || activeDeal.tagline || "";
@@ -315,7 +306,7 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
         <div className="lg:col-span-4 space-y-8">
           <DashCard title="Execution Team" icon={Briefcase} subtitle="Key Humans" locked={lockedPremium ? "pro" : null} onUpgrade={handleUpgrade} className="p-8 h-[590px] flex flex-col justify-between">
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 mt-6">
-              {displayTeam?.map((member, i) => (
+              {displayTeam.length > 0 ? displayTeam.map((member, i) => (
                 <div key={i} className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-[#01F27B]/30 hover:bg-white/10 transition-all group/member">
                   <div className="w-12 h-12 rounded-xl bg-[#01F27B]/10 flex items-center justify-center text-[#01F27B] font-black text-lg border border-[#01F27B]/10 group-hover/member:bg-[#01F27B] group-hover/member:text-black transition-all">
                     {member.name?.charAt(0) || "F"}
@@ -325,7 +316,17 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
                     <p className="text-[10px] font-black uppercase tracking-widest text-white/30">{member.role || "Founder"}</p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <div className="flex flex-col items-center justify-center h-full gap-4 py-10">
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                    <Briefcase className="w-7 h-7 text-white/20" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-sm font-bold text-white/30 mb-1">No Team Data</p>
+                    <p className="text-[11px] text-white/20 max-w-[180px] leading-relaxed">The founder hasn't added team members yet.</p>
+                  </div>
+                </div>
+              )}
             </div>
           </DashCard>
         </div>
@@ -371,17 +372,33 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
         <div className="lg:col-span-4 space-y-8">
           <DashCard title="The Vault" icon={Lock} subtitle="Data Room" locked={lockedSensitive ? "elite" : null} onUpgrade={handleUpgrade} className="p-8 h-[590px] flex flex-col justify-between">
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-3 mt-6">
-              {Object.entries(documents).filter(([_, val]) => hasValue(val)).map(([key, url]) => (
-                <a key={key} href={url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-[#01F27B]/30 hover:bg-white/10 transition-all group/doc">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center text-white/20 group-hover/doc:text-[#01F27B] transition-colors shadow-lg">
-                      <FileText className="w-5 h-5" />
+              {(() => {
+                const docEntries = Object.entries(documents).filter(([_, val]) => hasValue(val));
+                if (docEntries.length === 0) {
+                  return (
+                    <div className="flex flex-col items-center justify-center h-full gap-4 py-10">
+                      <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center">
+                        <FileText className="w-7 h-7 text-white/20" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-sm font-bold text-white/30 mb-1">No Documents Available</p>
+                        <p className="text-[11px] text-white/20 max-w-[180px] leading-relaxed">The founder hasn't uploaded any documents yet.</p>
+                      </div>
                     </div>
-                    <span className="text-sm font-bold text-white/70 truncate capitalize tracking-tight group-hover/doc:text-white transition-colors">{key.replace(/([A-Z])/g, ' $1')}</span>
-                  </div>
-                  <ArrowUpRight className="w-4 h-4 text-white/10 group-hover/doc:text-[#01F27B] transition-all" />
-                </a>
-              ))}
+                  );
+                }
+                return docEntries.map(([key, url]) => (
+                  <a key={key} href={url} target="_blank" rel="noreferrer" className="flex items-center justify-between p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-[#01F27B]/30 hover:bg-white/10 transition-all group/doc">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center text-white/20 group-hover/doc:text-[#01F27B] transition-colors shadow-lg">
+                        <FileText className="w-5 h-5" />
+                      </div>
+                      <span className="text-sm font-bold text-white/70 truncate capitalize tracking-tight group-hover/doc:text-white transition-colors">{key.replace(/([A-Z])/g, ' $1')}</span>
+                    </div>
+                    <ArrowUpRight className="w-4 h-4 text-white/10 group-hover/doc:text-[#01F27B] transition-all" />
+                  </a>
+                ));
+              })()}
             </div>
           </DashCard>
 
@@ -410,7 +427,7 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
                 </div>
               </div>
               <div className="space-y-4 pt-2">
-                {displayUseOfFunds?.map((item, i) => (
+                {displayUseOfFunds.length > 0 ? displayUseOfFunds.map((item, i) => (
                   <div key={i} className="space-y-2">
                     <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
                       <span className="text-white/40">{item.category}</span>
@@ -420,7 +437,9 @@ export default function DealDetailPage({ deal, dealId, onBack, userRole }) {
                       <div className="h-full bg-gradient-to-r from-[#01F27B] to-[#00d66d]" style={{ width: `${item.percentage}%` }} />
                     </div>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-xs text-white/30 italic text-center py-4">No allocation data provided.</p>
+                )}
               </div>
             </div>
           </DashCard>
