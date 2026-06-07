@@ -4,16 +4,16 @@ import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { Skeleton } from "@/shared/ui/skeleton";
 import {
-    AlertTriangle,
-    ArrowLeft,
-    ExternalLink,
-    FileText,
-    Mail,
-    Phone,
-    MapPin,
-    Globe,
-    TrendingUp,
-    ArrowUpRight,
+  AlertTriangle,
+  ArrowLeft,
+  ExternalLink,
+  FileText,
+  Mail,
+  Phone,
+  MapPin,
+  Globe,
+  TrendingUp,
+  ArrowUpRight,
 } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router";
@@ -386,10 +386,10 @@ export default function DealDetailPage({ deal, dealId, onBack }) {
                     </div>
                   )}
                   {website && (
-                    <a 
-                      href={website.startsWith('http') ? website : `https://${website}`} 
-                      target="_blank" 
-                      rel="noreferrer" 
+                    <a
+                      href={website.startsWith('http') ? website : `https://${website}`}
+                      target="_blank"
+                      rel="noreferrer"
                       className="flex items-center gap-2 bg-gradient-to-r from-[#01F27B]/20 to-[#01F27B]/5 border border-[#01F27B]/30 hover:border-[#01F27B] hover:shadow-[0_0_20px_rgba(1,242,123,0.25)] px-4 py-1.5 rounded-xl transition-all duration-300 group"
                     >
                       <div className="w-5 h-5 rounded-lg bg-[#01F27B] flex items-center justify-center shadow-[0_0_10px_rgba(1,242,123,0.3)]">
@@ -440,11 +440,11 @@ export default function DealDetailPage({ deal, dealId, onBack }) {
 
           {/* ─── NEW UNIFIED SECTIONS ─── */}
           <ProductStorySection story={story} />
-          <MarketStrategySection 
-            story={story} 
-            execution={execution} 
-            topCompetitor={topCompetitor} 
-            lockedPremium={false} 
+          <MarketStrategySection
+            story={story}
+            execution={execution}
+            topCompetitor={topCompetitor}
+            lockedPremium={false}
           />
 
           <div className="space-y-3">
