@@ -149,21 +149,21 @@ const SiteFooter = ({
               <p className="text-xs font-black text-[#01F27B] uppercase tracking-[0.2em]">Get Mobile App</p>
               <div className="flex flex-wrap gap-3">
                 {/* App Store */}
-                <button className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all text-left">
+                <a href="https://apps.apple.com/us/app/boostfundr/id6747165077" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all text-left">
                   <Apple size={24} className="text-white" />
                   <div>
                     <p className="text-[10px] text-white/50 leading-none">Download on</p>
                     <p className="text-sm font-bold text-white leading-none mt-1">App Store</p>
                   </div>
-                </button>
+                </a>
                 {/* Play Store */}
-                <button className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all text-left">
+                <a href="https://play.google.com/store/apps/details?id=com.boostfundr&pcampaignid=web_share" target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 hover:border-white/20 transition-all text-left">
                   <Play size={20} className="text-white fill-current" />
                   <div>
                     <p className="text-[10px] text-white/50 leading-none">Get it on</p>
                     <p className="text-sm font-bold text-white leading-none mt-1">Google Play</p>
                   </div>
-                </button>
+                </a>
               </div>
             </div>
           </div>
